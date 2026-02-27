@@ -31,7 +31,7 @@ def test_narrative_content_fallback_default():
         content_type=NarrativeContentType.DIALOGUE,
         content="Something stirs."
     )
-    assert content.fallback == False
+    assert content.fallback is False
     assert content.lore_refs == []
 
 def test_narrative_action_enum_values():

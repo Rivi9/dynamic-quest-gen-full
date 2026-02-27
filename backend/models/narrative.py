@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from enum import Enum
-from typing import Optional
 
 class NarrativeAction(str, Enum):
     LOWER_STAKES = "LOWER_STAKES"
@@ -21,7 +20,7 @@ class NarrativeContent(BaseModel):
     action_taken: NarrativeAction
     content_type: NarrativeContentType
     content: str
-    speaker: Optional[str] = None
+    speaker: str | None = None
     emotional_tone: str = "neutral"
     lore_refs: list[str] = []
     fallback: bool = False
