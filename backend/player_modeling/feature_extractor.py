@@ -17,7 +17,7 @@ class FeatureExtractor:
         damage_taken = sum(b.damage_taken for b in batches)
         obj_completed = sum(b.objectives_completed for b in batches)
         obj_attempted = max(sum(b.objectives_attempted for b in batches), 1)
-        tiles = max(b.tiles_explored for b in batches)
+        tiles = sum(b.tiles_explored for b in batches)
         total_tiles = batches[-1].total_tiles or 1
         d_shown = max(sum(b.dialogue_lines_shown for b in batches), 1)
         d_skipped = sum(b.dialogue_lines_skipped for b in batches)

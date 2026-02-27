@@ -15,7 +15,7 @@ class HexadProfiler:
         kills = sum(b.kills for b in batches)
         deaths = sum(b.deaths for b in batches)
         damage_dealt = sum(b.damage_dealt for b in batches)
-        tiles = max(b.tiles_explored for b in batches)
+        tiles = sum(b.tiles_explored for b in batches)
         total_tiles = max(batches[-1].total_tiles, 1)
         lore_read = sum(b.lore_items_read for b in batches)
         lore_found = max(sum(b.lore_items_found for b in batches), 1)
@@ -33,7 +33,7 @@ class HexadProfiler:
         explorer     = float(np.clip(0.5 * explore_rate + 0.5 * lore_rate, 0.0, 1.0))
         socializer   = float(np.clip(0.6 * _norm(voluntary_npc, 10) + 0.4 * dialogue_engage, 0.0, 1.0))
         free_spirit  = float(np.clip(0.5 * explore_rate + 0.5 * (1.0 - obj_rate), 0.0, 1.0))
-        disruptor    = float(np.clip(0.5 * _norm(kills, 20) + 0.2 * _norm(deaths, 10) + 0.3 * _norm(damage_dealt, 1000.0), 0.0, 1.0))
+        disruptor    = float(np.clip(0.65 * _norm(kills, 20) + 0.15 * _norm(deaths, 10) + 0.20 * _norm(damage_dealt, 1000.0), 0.0, 1.0))
         philanthropist = float(np.clip(0.6 * dialogue_engage + 0.4 * lore_rate, 0.0, 1.0))
 
         return HexadProfile(

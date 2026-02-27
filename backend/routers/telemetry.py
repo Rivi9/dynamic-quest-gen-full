@@ -26,8 +26,8 @@ async def telemetry_ws(websocket: WebSocket):
         pass
 
 
-@router.post("/telemetry")
 async def telemetry_http(batch: TelemetryBatch):
+    """HTTP fallback for Unity clients. Registered in main.py at /api/telemetry."""
     _store.insert(batch)
     return {"status": "received", "session_id": batch.session_id}
 
