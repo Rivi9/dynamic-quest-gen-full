@@ -82,6 +82,10 @@ def run_t_tests(df: pd.DataFrame) -> dict[str, dict]:
         exp  = df[df["condition"] == "Experimental"][dv].dropna()
         ctrl = df[df["condition"] == "Control"][dv].dropna()
 
+        if len(exp) < 2 or len(ctrl) < 2:
+            results[dv] = {"error": "insufficient data", "significant": False}
+            continue
+
         t, p = stats.ttest_ind(exp, ctrl, equal_var=False)  # Welch's t-test
         d    = pg.compute_effsize(exp, ctrl, eftype="cohen")
 
@@ -132,6 +136,8 @@ def compute_cronbach_alpha(df: pd.DataFrame, items: list[str]) -> float:
         return float("nan")
     item_vars  = item_df.var(axis=0, ddof=1).sum()
     total_var  = item_df.sum(axis=1).var(ddof=1)
+    if total_var == 0.0:
+        return float("nan")
     return round(float((k / (k - 1)) * (1 - item_vars / total_var)), 3)
 
 
@@ -175,7 +181,12 @@ if __name__ == "__main__":
     geq_flow_items = ["geq_item_5", "geq_item_13", "geq_item_25", "geq_item_28", "geq_item_31"]
     geq_imm_items  = ["geq_item_3", "geq_item_12", "geq_item_18", "geq_item_19", "geq_item_27", "geq_item_30"]
     if all(c in df.columns for c in geq_flow_items):
-        alpha_flow = compute_cronbach_alpha(df, geq_flow_items)
+        df_scored = df.copy()
+        df_scored["geq_item_5_r"]  = 4.0 - df_scored["geq_item_5"]
+        df_scored["geq_item_13_r"] = 4.0 - df_scored["geq_item_13"]
+        geq_flow_items_scored = ["geq_item_5_r", "geq_item_13_r",
+                                 "geq_item_25", "geq_item_28", "geq_item_31"]
+        alpha_flow = compute_cronbach_alpha(df_scored, geq_flow_items_scored)
         alpha_imm  = compute_cronbach_alpha(df, geq_imm_items)
         print(f"  GEQ Flow subscale:      α = {alpha_flow}")
         print(f"  GEQ Immersion subscale: α = {alpha_imm}")
