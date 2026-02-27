@@ -65,12 +65,24 @@ public class PlayerDataLogger : MonoBehaviour
 
     private void Awake()
     {
-        _sessionId  = Guid.NewGuid().ToString();
+        if (config == null)
+        {
+            Debug.LogError("[PlayerDataLogger] PluginConfig is not assigned. Disabling component.");
+            enabled = false;
+            return;
+        }
+        _sessionId    = Guid.NewGuid().ToString();
         _sessionStart = Time.time;
         _lastMoveTime = Time.time;
         StartNewBatch();
         InvokeRepeating(nameof(SendBatch), config.telemetryIntervalSeconds,
                         config.telemetryIntervalSeconds);
+    }
+
+    private void OnDestroy()
+    {
+        CancelInvoke(nameof(SendBatch));
+        StopAllCoroutines();
     }
 
     private void Update()
