@@ -1,0 +1,17 @@
+{
+  "name": "com.research.narrative-plugin",
+  "version": "0.1.0",
+  "displayName": "Narrative Personalization Plugin",
+  "description": "AI-driven dynamic narrative personalization plugin. Connects Unity games to a FastAPI backend for real-time player modelling and LLM-generated adaptive narrative.",
+  "unity": "6000.0",
+  "author": {
+    "name": "FYP Research"
+  },
+  "keywords": [
+    "narrative",
+    "personalization",
+    "ai",
+    "llm",
+    "player-modelling"
+  ]
+}

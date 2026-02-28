@@ -1,0 +1,137 @@
+  What was built
+
+  ┌─────────────────────┬────────────────────────────────────────────────────────────────────────────────────────┬────────┐
+  │        Layer        │                                         Files                                          │ Status │
+  ├─────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼────────┤
+  │ Backend scaffold    │ main.py, config.py, 3 Pydantic models                                                  │ ✅     │
+  ├─────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼────────┤
+  │ SQLite storage      │ db/telemetry_store.py                                                                  │ ✅     │
+  ├─────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼────────┤
+  │ Telemetry endpoints │ WebSocket + HTTP REST                                                                  │ ✅     │
+  ├─────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼────────┤
+  │ Player modeling     │ feature_extractor.py, flow_classifier.py, hexad_profiler.py, modeling_service.py       │ ✅     │
+  ├─────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼────────┤
+  │ Narrative pipeline  │ RAG retriever (numpy cosine sim), episodic memory, prompt builder, Ollama client       │ ✅     │
+  ├─────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼────────┤
+  │ RL adaptation       │ Gymnasium env, PPO reward function, SB3 agent (cold-start + lazy training)             │ ✅     │
+  ├─────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼────────┤
+  │ Lore                │ world.md, characters.md, quests.md                                                     │ ✅     │
+  ├─────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼────────┤
+  │ Unity plugin        │ PluginConfig.cs, PlayerDataLogger.cs, NarrativeManager.cs, ContentInjector.cs + asmdef │ ✅     │
+  ├─────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼────────┤
+  │ Evaluation          │ GEQ, miniPXI, NPS-3, interview guide, stats_analysis.py                                │ ✅     │
+  └─────────────────────┴────────────────────────────────────────────────────────────────────────────────────────┴────────┘
+
+  Next steps before the user study
+
+  1. Run Ollama: ollama pull phi3.5 on the study machine
+  2. Start backend: uvicorn backend.main:app --reload
+  3. Open Unity 6 and import the unity-plugin/ folder as a UPM local package
+  4. Create a PluginConfig asset (right-click → NarrativePlugin/Config) and wire it to PlayerDataLogger and NarrativeManager GameObjects
+  5. PPO training: run python -c "from backend.adaptation.agent import NarrativeAgent; NarrativeAgent(auto_train=True)" to train 200k timesteps
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   Method 1 — UPM Local Package (Recommended)
+
+  The package.json that was just added makes the plugin a proper UPM package.
+
+  Steps:
+  1. Open your Unity 6 project
+  2. Go to Window → Package Manager
+  3. Click the + button → Add package from disk…
+  4. Navigate to E:\Projects\fyp\v2\unity-plugin\ and select package.json
+  5. Unity imports the Runtime assembly and EditMode tests automatically
+
+  After import, the scripts are available project-wide — no namespace needed since autoReferenced: true.
+
+  Method 2 — Copy Scripts (Simpler, no package management)
+
+  If you just want the scripts without UPM:
+
+  Copy  E:\Projects\fyp\v2\unity-plugin\Runtime\
+    → YourUnityProject\Assets\NarrativePlugin\
+
+  That's it — Unity will compile the scripts on import.
+
+  Wiring it up in the scene
+
+  Once imported, in any scene:
+
+  1. Create an empty GameObject → rename it NarrativeSystem
+  2. Add components: PlayerDataLogger, NarrativeManager, ContentInjector
+  3. Right-click in Project → Create → NarrativePlugin/Config → name it PluginConfig
+  4. Set backendApiUrl to http://localhost:8000/api in the Inspector
+  5. Drag PluginConfig into the Config slot on both PlayerDataLogger and NarrativeManager
+  6. Drag ContentInjector into the Injector slot on NarrativeManager
+  7. Wire the three UnityEvents on ContentInjector to your dialogue/UI scripts
+
+  ---
+  Open Source Projects to Use as Testbed
+
+  For your research you need: NPC dialogue, combat, exploration, and a quest system — so you can hook telemetry events to real gameplay.
+
+  Best fit for your study
+
+  ┌──────────────────────┬────────────────────────────────────────────────────────────────────────────────────────┬──────────────────────────────────────────────┐   
+  │       Project        │                                      Why it fits                                       │                     Link                     │   
+  ├──────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────┤   
+  │ AnyRPG Core          │ Most complete — has NPC dialogue, quests, combat, lore, and scene transitions out of   │ https://github.com/AnyRPG/AnyRPGCore         │   
+  │                      │ the box. Unity 6 compatible. The plugin wires in cleanly.                              │                                              │   
+  ├──────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────┤   
+  │ Quest System Pro     │ Was a paid Asset Store plugin, now fully open-source. Has NPC events, dialogue trees,  │ https://github.com/devdogio/Quest-System-Pro │   
+  │ (devdogio)           │ and waypoints — exactly what NarrativeManager injects into.                            │                                              │   
+  ├──────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────┤   
+  │ XavsRPGEngine        │ Lightweight 2D overworld + battle split — simpler to hook telemetry events into than   │ https://github.com/XaviSmith/XavsRPGEngine   │   
+  │                      │ AnyRPG. Good for a controlled study.                                                   │                                              │   
+  └──────────────────────┴────────────────────────────────────────────────────────────────────────────────────────┴──────────────────────────────────────────────┘   
+
+  Recommendation: AnyRPG Core
+
+  It has everything the study needs built in:
+  - Combat system → hook OnKill, OnDeath, OnDamageTaken
+  - NPC dialogue system → hook OnDialogueShown, OnVoluntaryNPCInteraction
+  - Quest system → hook OnObjectiveCompleted, SetObjective
+  - Scene/zone exploration → hook OnTileExplored, SetLocation
+  - Lore/item pickups → hook OnLoreItemRead
+
+  All of these map directly to the PlayerDataLogger public API you already built.
+
+  Quick setup with AnyRPG
+
+  # Clone AnyRPG into a separate folder
+  git clone https://github.com/AnyRPG/AnyRPGCore.git
+
+  # Open it in Unity 6 Hub, then:
+  # 1. Import your plugin via UPM (Method 1 above)
+  # 2. Add NarrativeSystem GameObject to their main scene
+  # 3. Create a TelemetryHooks.cs that subscribes to AnyRPG's events
+  #    and calls PlayerDataLogger methods
+
+  A minimal TelemetryHooks.cs bridge would look like:
+  // Subscribe to AnyRPG's event system, call PlayerDataLogger methods
+  void OnEnemyDied() => logger.OnKill();
+  void OnPlayerDied() => logger.OnDeath();
+  void OnQuestCompleted(Quest q) { logger.OnObjectiveCompleted(); logger.SetObjective(q.name); }
+  // etc.
+
+  Sources:
+  - https://github.com/AnyRPG/AnyRPGCore
+  - https://github.com/devdogio/Quest-System-Pro
+  - https://github.com/XaviSmith/XavsRPGEngine
