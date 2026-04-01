@@ -5,14 +5,14 @@ from backend.narrative.rag_retriever import LoreRetriever
 def test_retriever_returns_relevant_lore():
     retriever = LoreRetriever(persist_dir=":memory:")
     retriever.add_document(
-        "The Thornwood Dungeon holds an ancient seal.", metadata={"source": "world"}
+        "The Vault is an ancient dungeon beneath the Contested Vale.", metadata={"source": "world"}
     )
     retriever.add_document(
-        "Captain Aldric is a haunted soldier.", metadata={"source": "characters"}
+        "Commander Varis leads the Azure Veil's forward post.", metadata={"source": "characters"}
     )
     results = retriever.retrieve("tell me about the dungeon", top_k=1)
     assert len(results) == 1
-    assert "dungeon" in results[0]["text"].lower() or "thornwood" in results[0]["text"].lower()
+    assert "dungeon" in results[0]["text"].lower() or "vault" in results[0]["text"].lower()
 
 
 def test_retriever_returns_list_on_empty_collection():
@@ -46,7 +46,7 @@ from backend.narrative.memory import EpisodicMemory
 def test_memory_stores_events():
     mem = EpisodicMemory(max_events=5)
     mem.add_event("Player helped the merchant.", importance=0.9)
-    mem.add_event("Player ignored Aldric's warning.", importance=0.7)
+    mem.add_event("Player ignored the Chronicler's warning.", importance=0.7)
     assert len(mem.events) == 2
 
 
@@ -104,7 +104,7 @@ def _make_model(flow: FlowState = FlowState.ANXIETY) -> PlayerModel:
 
 def test_prompt_builder_system_contains_json_rule():
     builder = PromptBuilder()
-    system, _ = builder.build(_make_model(), NarrativeAction.ADD_MYSTERY, location="Thornwood")
+    system, _ = builder.build(_make_model(), NarrativeAction.ADD_MYSTERY, location="The Vault")
     assert "JSON" in system
     assert "fallback" in system
 
@@ -164,8 +164,8 @@ def test_narrative_endpoint_with_mocked_ollama():
         resp = client.post("/api/narrative/generate", json={
             "session_id": "narrative-test-session",
             "player_id": "p1",
-            "location": "Thornwood Dungeon",
-            "quest_stage": "Find the broken seal",
+            "location": "The Vault",
+            "quest_stage": "Descend to the Vault",
         })
     assert resp.status_code == 200
     data = resp.json()
@@ -183,7 +183,7 @@ def test_narrative_endpoint_returns_fallback_gracefully():
         resp = client.post("/api/narrative/generate", json={
             "session_id": "fallback-test",
             "player_id": "p1",
-            "location": "Ashfen Village",
+            "location": "The Contested Vale",
             "quest_stage": "None",
         })
     # Should still return 200 — the agent.select_action picks NO_CHANGE for FLOW cold-start

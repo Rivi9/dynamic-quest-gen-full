@@ -57,12 +57,12 @@ def test_telemetry_store_preserves_all_fields():
         window_start=0.0, window_end=5.0,
         kills=2, deaths=1, damage_taken=45.5,
         tiles_explored=30, total_tiles=100,
-        current_location="Thornwood Dungeon",
+        current_location="The Vault",
         session_elapsed=300.0
     )
     store.insert(original)
     retrieved = store.get_session("s1")[0]
     assert retrieved.kills == 2
     assert retrieved.damage_taken == 45.5
-    assert retrieved.current_location == "Thornwood Dungeon"
+    assert retrieved.current_location == "The Vault"
     assert retrieved.session_elapsed == 300.0
