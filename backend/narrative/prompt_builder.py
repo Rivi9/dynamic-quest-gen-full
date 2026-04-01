@@ -9,7 +9,7 @@ _TONE_MAP = {
 }
 
 _SYSTEM_TEMPLATE = """\
-You are a narrative writer for a dark fantasy RPG called Eryndal.
+You are a narrative writer for a dark fantasy RPG set in the Contested Vale, a war-torn land between the Azure Veil and Crimson Host factions.
 Generate SHORT content: dialogue (2-4 sentences) or descriptions (1-2 sentences).
 
 STRICT RULES:
@@ -49,7 +49,7 @@ RELEVANT LORE:
 
 CONSTRAINTS:
 - Forbidden: real-world references, anachronisms, fourth-wall breaks
-- Character voices: Aldric=formal/melancholic, Mira=dry/witty, Stranger=cryptic/short sentences
+- Character voices: Commander Varis=direct/military, The Chronicler=scholarly/cryptic, Sera=pragmatic/warm, Vault Warden=menacing/terse
 
 Generate the narrative JSON:
 """

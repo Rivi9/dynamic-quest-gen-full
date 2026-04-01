@@ -30,8 +30,8 @@ public class NarrativeManager : MonoBehaviour
     [SerializeField] private PlayerDataLogger logger;
 
     [Header("Context (update from game systems)")]
-    public string currentLocation = "Ashfen Village";
-    public string currentQuestStage = "Find the broken seal";
+    public string currentLocation = "FeaturesDemoZone";
+    public string currentQuestStage = "Patrol the Contested Vale";
 
     [Range(10f, 60f)]
     public float narrativePollingInterval = 30f;
@@ -92,7 +92,7 @@ public class NarrativeManager : MonoBehaviour
         if (webReq.result == UnityWebRequest.Result.Success)
         {
             var response = JsonUtility.FromJson<NarrativeResponse>(webReq.downloadHandler.text);
-            if (response != null && !response.fallback)
+            if (response != null)
                 injector.Apply(response);
         }
         else

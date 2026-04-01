@@ -65,6 +65,8 @@ public class PlayerDataLogger : MonoBehaviour
 
     private void Awake()
     {
+        DontDestroyOnLoad(gameObject);
+        Debug.Log("[PlayerDataLogger] Awake() called. Config assigned: " + (config != null));
         if (config == null)
         {
             Debug.LogError("[PlayerDataLogger] PluginConfig is not assigned. Disabling component.");
@@ -123,6 +125,8 @@ public class PlayerDataLogger : MonoBehaviour
         yield return req.SendWebRequest();
 
         if (req.result != UnityWebRequest.Result.Success)
-            Debug.LogWarning($"[PlayerDataLogger] Telemetry POST failed: {req.error}");
+            Debug.LogWarning($"[PlayerDataLogger] Telemetry POST failed: {req.error} | URL: {url}");
+        else
+            Debug.Log($"[PlayerDataLogger] Telemetry POST ok → {req.downloadHandler.text}");
     }
 }

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(find /e/Projects/fyp/v2 -type f \\\\\\(-name *.cs \\\\\\))",
+      "Bash(grep -n \"currentLocation.*Ashfen\\\\|Thornwood\" /e/Projects/fyp/v2/docs/plans/*.md)"
+    ]
+  }
+}

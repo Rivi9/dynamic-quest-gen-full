@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from pathlib import Path
 from pydantic import BaseModel
 from backend.models.narrative import NarrativeContent
 from backend.models.player_model import PlayerModel
@@ -14,6 +15,11 @@ from backend.config import settings
 router = APIRouter()
 
 _retriever = LoreRetriever(persist_dir=settings.chroma_persist_dir)
+
+# Load lore files into the retriever at startup
+_LORE_DIR = Path(__file__).resolve().parents[2] / "lore"
+for _lore_file in _LORE_DIR.glob("*.md"):
+    _retriever.add_documents_from_file(str(_lore_file), source=_lore_file.name)
 _memory: dict[str, EpisodicMemory] = {}
 _prompt_builder = PromptBuilder()
 _ollama = OllamaClient()
