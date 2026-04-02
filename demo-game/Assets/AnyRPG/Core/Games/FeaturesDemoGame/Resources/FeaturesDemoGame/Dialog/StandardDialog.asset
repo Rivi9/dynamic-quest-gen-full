@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd3ecde65e0933d4d8e78e24e9ae3820, type: 3}
+  m_Name: StandardDialog
+  m_EditorClassIdentifier: 
+  resourceName: Standard Dialog
+  displayName: 
+  icon: {fileID: 0}
+  iconBackgroundImage: {fileID: 0}
+  description: 
+  useRegionalDescription: 0
+  resourceDescriptionProfile: 
+  automatic: 0
+  repeatable: 0
+  audioProfileName: 
+  dialogNodes:
+  - startTime: 0
+    showTime: 0
+    description: 'The Vault has been sealed for three hundred years. The seal was never meant to be permanent — it was an emergency measure.'
+    nextOption: What was it sealing?
+  - startTime: 0
+    showTime: 0
+    description: 'A dragon. Old enough that the factions''s ancestors were not yet factions when it was bound.'
+    nextOption: Is it still alive?
+  - startTime: 0
+    showTime: 0
+    description: 'Very much so. It dreams. Those dreams leak upward through the stone — soldiers who sleep near the entrance report them.'
+    nextOption: What do they dream?
+  - startTime: 0
+    showTime: 0
+    description: 'Open spaces. Heat. A voice speaking in a language they don''t know but understand perfectly. None of them sleep near the entrance twice.'
+    nextOption: Can the seal hold?
+  - startTime: 0
+    showTime: 0
+    description: 'It has held three hundred years. Three of its nine panels are cracked. At current deterioration rate — she pauses to calculate — another thirty years. Perhaps less if the fighting continues.'
+    nextOption: The fighting is damaging it?
+  - startTime: 0
+    showTime: 0
+    description: 'Vibration. Explosions. The structural integrity of the chamber is not what it was. Both factions are accelerating the timeline without knowing it.'
+    nextOption: 
+  prerequisiteConditions: []
