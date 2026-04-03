@@ -4,13 +4,13 @@ from backend.config import settings
 from backend.models.narrative import NarrativeContent, NarrativeAction, NarrativeContentType
 
 _FALLBACK_MAP: dict[NarrativeAction, str] = {
-    NarrativeAction.PROVIDE_GUIDANCE: "The path ahead is treacherous. Tread carefully.",
-    NarrativeAction.RAISE_STAKES:     "Something stirs in the darkness. You feel watched.",
-    NarrativeAction.ADD_MYSTERY:      "A symbol on the wall catches your eye. You have seen it before.",
-    NarrativeAction.LOWER_STAKES:     "The air grows lighter here. A moment of respite.",
-    NarrativeAction.INCREASE_URGENCY: "A distant sound echoes. Something is coming.",
-    NarrativeAction.ADD_HUMOR:        "You trip slightly. A rat watches you, unimpressed.",
-    NarrativeAction.LORE_REWARD:      "Worn carvings on the wall tell an old story.",
+    NarrativeAction.PROVIDE_GUIDANCE: "Varis's voice, clipped and flat: 'Stay to the northern approach. The centre is exposed.'",
+    NarrativeAction.RAISE_STAKES:     "Movement on the south ridge. The Crimson Host archers have shifted position.",
+    NarrativeAction.ADD_MYSTERY:      "The Chronicler looks up from her journal, watching you pass. She does not write anything down.",
+    NarrativeAction.LOWER_STAKES:     "The fighting is elsewhere, for now. The Vale is briefly, almost quietly, itself.",
+    NarrativeAction.INCREASE_URGENCY: "From the direction of the Vault entrance, a sound that is not wind and not an animal.",
+    NarrativeAction.ADD_HUMOR:        "Sera calls after you: 'Try not to die. I just restocked and I hate doing inventory.'",
+    NarrativeAction.LORE_REWARD:      "The Chronicler's voice, without looking up: 'The seal has nine panels. Three are cracked. She has been counting.'",
     NarrativeAction.NO_CHANGE:        "",
 }
 

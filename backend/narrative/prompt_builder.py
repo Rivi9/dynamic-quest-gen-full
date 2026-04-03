@@ -2,54 +2,74 @@ from backend.models.player_model import PlayerModel
 from backend.models.narrative import NarrativeAction
 
 _TONE_MAP = {
-    "ANXIETY": "urgent and supportive — the player is struggling",
-    "BOREDOM": "exciting and surprising — inject energy",
-    "FLOW":    "immersive and atmospheric — maintain the experience",
-    "APATHY":  "intriguing and mysterious — re-engage the player",
+    "ANXIETY": "urgent and supportive — the player is struggling and needs grounding",
+    "BOREDOM": "energetic and surprising — inject something unexpected to re-engage",
+    "FLOW":    "immersive and atmospheric — deepen the world without interrupting flow",
+    "APATHY":  "intriguing and mysterious — create a hook that makes the player curious",
+}
+
+_ACTION_GUIDANCE = {
+    "LOWER_STAKES":      "Offer a moment of respite or warmth. A friendly NPC comment, a quiet environmental detail.",
+    "RAISE_STAKES":      "Escalate tension. Remind the player that something important is at risk. Use Commander Varis or environment.",
+    "ADD_MYSTERY":       "Plant a hook. The Chronicler hints at something she hasn't explained. A strange detail in the environment.",
+    "ADD_HUMOR":         "A dry, in-world moment of levity. Sera's deadpan or an absurd battlefield observation. Keep it brief.",
+    "PROVIDE_GUIDANCE":  "Help the struggling player without breaking immersion. Varis gives a direct tactical hint. The Chronicler offers a caution.",
+    "INCREASE_URGENCY":  "Something is happening that requires immediate attention. A patrol report, Vault sounds, movement on the ridge.",
+    "LORE_REWARD":       "Deliver a piece of world history or character backstory as a discovery. Use the Chronicler or environmental details.",
+    "NO_CHANGE":         "Return empty content — no narrative injection needed this cycle.",
 }
 
 _SYSTEM_TEMPLATE = """\
-You are a narrative writer for a dark fantasy RPG set in the Contested Vale, a war-torn land between the Azure Veil and Crimson Host factions.
-Generate SHORT content: dialogue (2-4 sentences) or descriptions (1-2 sentences).
+You are a narrative writer for a dark fantasy RPG set in the Contested Vale — a war-torn land between two factions: the Azure Veil (disciplined, oath-bound defenders) and the Crimson Host (aggressive conquerors). Beneath the Vale, a sealed Vault holds an ancient dragon called the Bound One.
 
-STRICT RULES:
-- Stay in the game world. No real-world references. No fourth-wall breaks.
+Generate SHORT, grounded content. Dialogue: 2-3 sentences max. Descriptions: 1-2 sentences max.
+
+WORLD RULES:
+- The Azure Veil is disciplined and protective. The Crimson Host is aggressive and pragmatic.
+- The Vault's Minions attack everyone regardless of faction. The Vault Warden is the boss guardian.
+- The Chronicler is neutral, scholarly, and knows the most about the Vault.
+- Commander Varis is the Azure Veil forward commander — direct, unsentimental, military.
+- Sera is the supply vendor — warm, commercially focused, deflects personal questions.
+- The Bound One communicates through dreams and visions, not direct speech.
+
+OUTPUT RULES:
+- Output ONLY valid JSON. No markdown, no text before or after.
+- Stay strictly in-world. No fourth-wall breaks, no real-world references.
 - Tone: {tone}
-- Output ONLY valid JSON. No markdown, no explanation before or after.
-- If you cannot generate coherent in-world content, output exactly: {{"fallback": true}}
+- If you cannot generate coherent in-world content: {{"fallback": true}}
 
-Required output schema:
+Required JSON schema:
 {{"type": "dialogue|description|quest_update",
-  "content": "...",
-  "speaker": "NPC name or null",
+  "content": "the narrative text",
+  "speaker": "character name or null for environmental descriptions",
   "emotional_tone": "hopeful|neutral|tense|mysterious|humorous"}}
 """
 
 _USER_TEMPLATE = """\
 PLAYER STATE:
-- Flow State: {flow_state} (challenge/skill ratio: {ratio:.2f})
+- Flow: {flow_state} (challenge/skill ratio: {ratio:.2f})
 - Activity: {current_state}
-- Session elapsed: {elapsed}s
-- Playstyle: Explorer={explorer:.0%}, Socializer={socializer:.0%}, Achiever={achiever:.0%}, Disruptor={disruptor:.0%}
-
-NARRATIVE ACTION: {action}
-Actions reference:
-  LOWER_STAKES=ease tension, RAISE_STAKES=increase urgency,
-  ADD_MYSTERY=curiosity hook, ADD_HUMOR=comic relief,
-  PROVIDE_GUIDANCE=help struggling player, INCREASE_URGENCY=re-engage bored player,
-  LORE_REWARD=discovery payoff, NO_CHANGE=no new content needed
+- Session time: {elapsed}s
+- Playstyle: Explorer={explorer:.0%} Socializer={socializer:.0%} Achiever={achiever:.0%} Disruptor={disruptor:.0%}
 
 LOCATION: {location}
 ACTIVE QUEST: {quest_stage}
 
-RELEVANT LORE:
+NARRATIVE ACTION: {action}
+Guidance for this action: {action_guidance}
+
+RELEVANT LORE (use this for grounding, not verbatim):
 {lore_context}
 
 {memory_context}
 
-CONSTRAINTS:
-- Forbidden: real-world references, anachronisms, fourth-wall breaks
-- Character voices: Commander Varis=direct/military, The Chronicler=scholarly/cryptic, Sera=pragmatic/warm, Vault Warden=menacing/terse
+TASK: Generate one short narrative moment appropriate for this action and player state.
+- If action is PROVIDE_GUIDANCE: Varis or the Chronicler delivers a tactically useful hint.
+- If action is ADD_MYSTERY: The Chronicler, Bound One vision, or environment hints at something unresolved.
+- If action is LORE_REWARD: Deliver a piece of history about the Vault, the factions, or the First Sundering.
+- If action is RAISE_STAKES or INCREASE_URGENCY: Something concrete is happening — patrol contact, Vault sounds, ridge movement.
+- If action is LOWER_STAKES or ADD_HUMOR: Sera's dry observation or a quiet moment between fights.
+- If action is NO_CHANGE: Return {{"fallback": true}}
 
 Generate the narrative JSON:
 """
@@ -65,10 +85,12 @@ class PromptBuilder:
         lore_context: list[str] | None = None,
         memory_context: str = "",
     ) -> tuple[str, str]:
-        tone = _TONE_MAP.get(player_model.flow_state.value, "neutral")
+        tone = _TONE_MAP.get(player_model.flow_state.value, "neutral and immersive")
+        action_guidance = _ACTION_GUIDANCE.get(action.value, "Generate an appropriate narrative moment.")
+
         lore_str = "\n".join(f"- {l}" for l in (lore_context or []))
         if not lore_str:
-            lore_str = "- No specific lore retrieved."
+            lore_str = "- No specific lore retrieved. Use general world knowledge about the Contested Vale."
 
         system = _SYSTEM_TEMPLATE.format(tone=tone)
         user = _USER_TEMPLATE.format(
@@ -81,6 +103,7 @@ class PromptBuilder:
             achiever=player_model.hexad_profile.achiever,
             disruptor=player_model.hexad_profile.disruptor,
             action=action.value,
+            action_guidance=action_guidance,
             location=location,
             quest_stage=quest_stage,
             lore_context=lore_str,

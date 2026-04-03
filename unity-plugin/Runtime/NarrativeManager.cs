@@ -67,6 +67,7 @@ public class NarrativeManager : MonoBehaviour
 
     private void RequestNarrative()
     {
+        Debug.Log($"[NarrativeManager] Polling narrative — location: {currentLocation}, quest: {currentQuestStage}");
         StartCoroutine(FetchNarrative());
     }
 
@@ -91,13 +92,16 @@ public class NarrativeManager : MonoBehaviour
 
         if (webReq.result == UnityWebRequest.Result.Success)
         {
+            Debug.Log($"[NarrativeManager] Response: {webReq.downloadHandler.text}");
             var response = JsonUtility.FromJson<NarrativeResponse>(webReq.downloadHandler.text);
             if (response != null)
                 injector.Apply(response);
+            else
+                Debug.LogWarning("[NarrativeManager] Response parsed as null.");
         }
         else
         {
-            Debug.LogWarning($"[NarrativeManager] Narrative request failed: {webReq.error}");
+            Debug.LogWarning($"[NarrativeManager] Request failed: {webReq.error} — URL: {config.backendApiUrl}/narrative/generate");
         }
 
         webReq.Dispose();

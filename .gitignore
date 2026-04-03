@@ -9,4 +9,3 @@ data/telemetry.db
 dist/
 build/
 .env
-demo-game/

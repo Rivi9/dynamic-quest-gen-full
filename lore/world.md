@@ -1,47 +1,87 @@
 # World Lore
 
-## Overview
+## The Contested Vale — FeaturesDemoZone
 
-The land of Eryndal is fractured by a war between two ancient orders: the Azure Veil (Blue faction) and the Crimson Host (Red faction). A third threat stirs beneath the earth — creatures that serve neither side, drawn to old power sealed in the Vault below the Vale.
+The Contested Vale is the primary warzone between the Azure Veil and the Crimson Host. It was once a fertile trade corridor connecting the northern highlands to the southern coast. That was three generations ago.
 
----
+Now the Vale is a patchwork of scorched fields, crumbled waypoints, and shallow graves. The Azure Veil holds the northern ridge and the old merchant road. The Crimson Host presses from the south, using the ruined watchtower as a staging point.
 
-## FeaturesDemoZone — The Contested Vale
+### Key Locations in the Vale
 
-The Contested Vale is the primary warzone between the Azure Veil and the Crimson Host. Open fields and ruined outposts mark the front lines. The Azure Veil holds the northern ridge; the Crimson Host presses from the south.
+**The Waystone** — An ancient stone pillar carved with binding runes, once used by traders to mark safe passage. Both factions consider it a tactical objective. Neither controls it. The Chronicler keeps her camp beside it, apparently unconcerned by the fighting.
 
-Civilian refugees sheltering in the valley's centre have nowhere to go. Supply caravans are ambushed daily. The Vale's ancient waystone, once used for peaceful trade, is now used as a vantage point by Red archers.
+**Commander Varis's Post** — A fortified camp at the northern edge of the Vale. Supply crates, a field surgeon's tent, and a weapon rack mark it as semi-permanent. Varis has held this position for four months.
 
-Entering the Vale means choosing a side — or surviving both.
+**Sera's Supply Stall** — A canvas-covered stall behind the Azure Veil lines. Sera trades in food, potions, and field equipment. She also buys salvage — weapons, armour scraps, anything recovered from the dead. She does not explain who she sells it to.
 
----
+**The South Ridge** — Crimson Host territory. Archers maintain positions on the ridge overlooking the Vale. Approaching the ridge without cover is suicidal. At night, their campfires are visible from Varis's post.
 
-## FeaturesDemoDungeon — The Vault
+**The Vault Entrance** — A stone archway at the Vale's eastern edge, half-buried in collapsed earth. The door is iron, corroded but intact. Strange sounds emerge at irregular intervals — not animal, not human.
 
-Beneath the Vale lies the Vault: a collapsed fortress whose lower chambers were sealed after the First Sundering. The seal has weakened. Minions of an older evil now patrol the upper halls, and their master — a bound dragon — stirs in the deepest chamber.
+### What Soldiers Say About the Vale
 
-The Vault has two sections:
-- **Upper halls**: patrolled by Vault Minions, corrupted soldiers who no longer remember their allegiance.
-- **The Sealed Chamber**: where the Vault Boss guards the broken seal and the dragon known only as the Bound One sleeps beneath it.
+"The ground shifts here at night. Not an earthquake. Something else." — Azure Veil fighter
 
-Anyone who enters the Vault alone rarely returns. Those who do carry scars they do not speak of.
+"I've stopped burying the Red faction dead. They don't stay buried." — Azure Veil knight
 
----
-
-## FeaturesDemoCutsceneZone — The Shattered Field
-
-An ancient battlefield predating the current war. Bones of the fallen from the First Sundering lie here undisturbed. The Azure Veil considers it sacred ground; the Crimson Host considers it a shortcut.
-
-Strange lights appear over the field at dusk. Soldiers on both sides avoid it after dark.
+"The Chronicler has been here since before the war. Think about that." — Azure Veil ranger
 
 ---
 
-## Factions
+## The Vault — FeaturesDemoDungeon
 
-**The Azure Veil (Blue faction):** Disciplined, defensive, oath-bound. They fight to hold ground and protect civilians. Their fighters, knights, and mages follow a strict code. Losing ground is shameful; abandoning civilians is unforgivable.
+Beneath the Vale lies the Vault: a collapsed fortress whose lower chambers were sealed after the First Sundering three hundred years ago. The seal has weakened. No one knows exactly when it began to fail.
 
-**The Crimson Host (Red faction):** Aggressive, tactically flexible, motivated by conquest. Their archers, warriors, and necromancers use any method that achieves victory. They view the Azure Veil's code as weakness.
+### Upper Halls
 
-**The Vault's creatures (Enemy faction):** EnemyMinion and EnemyBoss units serve no living master. They are drawn to the broken seal and attack anyone who enters the Vault regardless of faction.
+The upper section of the Vault is accessible. Vault Minions — corrupted soldiers in varying stages of decay — patrol in slow, overlapping routes. They were Azure Veil soldiers once. The corruption erases faction memory; they attack anyone.
 
-**The Bound One (Dragon):** An ancient dragon sealed beneath the Vault's deepest chamber. It is not fully awake. The seal keeps it docile — for now. Disturbing the seal accelerates its awakening.
+The upper halls contain remnants of the original garrison: weapon racks stripped bare, sleeping quarters collapsed, a mess hall with plates still set. Whatever happened here happened quickly.
+
+### The Sealed Chamber
+
+Deeper in, past a collapsed stairwell, is the sealed chamber. A single heavy door with iron bindings marks the entrance. The Vault Warden — the last remaining guardian, itself partially corrupted — patrols outside it.
+
+Beyond the door: the seal itself, a circular array of carved stone panels, several now cracked. And below the seal, audible if you press your ear to the floor: breathing.
+
+### The Bound One
+
+The dragon sealed beneath the Vault is called the Bound One by those who know of it. It has been here three hundred years. It is not dead. It is not fully awake. The seal keeps it in a state of half-dreaming.
+
+Those who sleep near the Vault's entrance sometimes report dreams that are not their own — vast spaces, fire, a voice that speaks in a language they do not know but somehow understand.
+
+---
+
+## The Shattered Field — FeaturesDemoCutsceneZone
+
+An ancient battlefield predating the current war by centuries. The First Sundering ended here — or rather, was ended here by force. The Azure Veil's founders performed the binding ritual in the centre of this field while the battle still raged around them.
+
+Bones of the fallen lie in ordered rows, a sign that someone cared enough to arrange them after. No faction claims responsibility. The Azure Veil considers the field sacred. The Crimson Host considers it a shortcut.
+
+Strange lights appear at dusk — blue-white, low to the ground, moving slowly. The Chronicler calls them "residual binding energy." Soldiers call them something less scientific.
+
+---
+
+## Faction Histories
+
+### The Azure Veil
+
+Founded three hundred years ago in the aftermath of the First Sundering, the Azure Veil began as a military-religious order charged with maintaining the Vault's seal. Over generations they evolved into a full military faction, but the original mandate remains: hold the Vale, protect the seal, prevent the Bound One from waking.
+
+Their fighters, knights, archers, mages, and priests operate under a strict code of conduct. Civilians are protected. Prisoners are taken, not killed. Ground is held, not abandoned.
+
+Commander Varis is the third Varis to hold this post. It is a hereditary appointment. He does not discuss his father.
+
+### The Crimson Host
+
+The Crimson Host was formed from soldiers who deserted or were expelled from the Azure Veil in the decades after the First Sundering. They reject the Veil's mandate and its restrictions. Their position: the Bound One is sealed, it will remain sealed, and obsessing over it is a distraction from the real war.
+
+They want the Vale for its trade routes, its farmland, and the tactical advantage of the northern ridge. They do not believe the Vault is a serious threat. Most of them have never been inside it.
+
+Their warriors, archers, fire mages, necromancers, and rangers are effective and flexible. They take prisoners when it is convenient and do not when it is not.
+
+### The Corrupted — Vault Creatures
+
+The creatures of the Vault serve nothing living. The corruption that changed them severed faction memory and higher cognition. They operate on instinct: defend the seal, attack intruders, move in groups.
+
+They are strongest in the Vault's lower levels. In the upper halls they are manageable. Near the Shattered Field, isolated Minion sightings have been reported — something is drawing them outward.

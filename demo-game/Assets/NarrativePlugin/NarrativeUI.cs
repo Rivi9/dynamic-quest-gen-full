@@ -39,11 +39,30 @@ public class NarrativeUI : MonoBehaviour
 
     private void Awake()
     {
+        DontDestroyOnLoad(gameObject);
+
         _canvasGroup = panel.GetComponent<CanvasGroup>();
         if (_canvasGroup == null)
             _canvasGroup = panel.AddComponent<CanvasGroup>();
 
         panel.SetActive(false);
+    }
+
+    private void Start()
+    {
+        // Subscribe to ContentInjector in code — bypasses unreliable multi-param UnityEvent wiring
+        var injector = FindObjectOfType<ContentInjector>();
+        if (injector != null)
+        {
+            injector.OnDialogueInjected.AddListener(ShowDialogue);
+            injector.OnDescriptionInjected.AddListener(ShowDescription);
+            injector.OnQuestUpdateInjected.AddListener(ShowQuestUpdate);
+            Debug.Log("[NarrativeUI] Subscribed to ContentInjector events.");
+        }
+        else
+        {
+            Debug.LogWarning("[NarrativeUI] ContentInjector not found — HUD will not receive narrative.");
+        }
     }
 
     // ── Public API — wire these to ContentInjector events ─────────────────
