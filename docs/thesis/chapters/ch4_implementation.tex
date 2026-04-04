@@ -1,0 +1,163 @@
+%##########################################################################
+% CHAPTER 4: SYSTEM IMPLEMENTATION
+%##########################################################################
+\chapter{System Implementation}
+
+\section{Chapter Overview}
+
+This chapter documents the technical implementation of the five-module system described in Chapter~3. It details the technology stack, backend service architecture, database design, player modelling implementation, narrative pipeline, RL adaptation engine, and Unity plugin. The chapter also describes the testing and validation procedures applied to ensure system correctness.
+
+\section{Technology Stack}
+
+The system is implemented across two platforms: a Python backend service and a Unity C\# plugin. Table~\ref{tab:backend_stack} and Table~\ref{tab:unity_stack} summarize the key dependencies.
+
+\begin{table}[H]
+\centering
+\caption{Backend technology stack.}
+\label{tab:backend_stack}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Component} & \textbf{Technology} & \textbf{Version} \\
+\midrule
+Runtime & Python & 3.14 \\
+API framework & FastAPI & 0.115+ \\
+Data validation & Pydantic & v2 \\
+Database & SQLite & (stdlib) \\
+RL framework & Stable-Baselines3 & 2.x \\
+RL environment & Gymnasium & 0.29+ \\
+Embeddings & sentence-transformers & latest \\
+LLM client & httpx (Ollama API) & 0.27+ \\
+Numerical & NumPy & 2.x \\
+Statistics & SciPy, pingouin & latest \\
+Data analysis & pandas & 2.x \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Unity plugin and inference stack.}
+\label{tab:unity_stack}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Component} & \textbf{Technology} & \textbf{Version} \\
+\midrule
+Engine & Unity & 6 LTS \\
+Language & C\# & .NET 9 \\
+HTTP client & UnityWebRequest & built-in \\
+JSON & Newtonsoft.Json & 13.x \\
+UI & TextMeshPro & built-in \\
+\midrule
+LLM runtime & Ollama (local) & --- \\
+Primary model & Phi-3.5 Mini & 3.8B params \\
+Fallback model & Llama 3.2 3B & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Backend Service}
+
+The FastAPI backend exposes four primary endpoints:
+
+\begin{itemize}
+\item \texttt{POST /telemetry/batch} --- accepts a \texttt{TelemetryBatch} payload, persists it to SQLite, triggers player modelling, and initiates the adaptation cycle.
+\item \texttt{GET /narrative/generate} --- returns the latest \texttt{NarrativeContent} for a given session, blocking until generation is complete.
+\item \texttt{GET /player/model/\{player\_id\}} --- returns the current \texttt{PlayerModel} including Hexad profile, Flow state, and session metadata.
+\item \texttt{WebSocket /ws/telemetry/\{session\_id\}} --- low-latency telemetry streaming channel.
+\end{itemize}
+
+The server is configured with CORS middleware to accept connections from the Unity client's localhost origin. All data is persisted to SQLite with separate tables for telemetry batches, player models, and narrative events. Pydantic v2 models handle all input validation and output serialization, ensuring type safety at the API boundary.
+
+The asynchronous architecture of FastAPI allows the narrative generation pipeline --- including the 8-second Ollama timeout --- to execute without blocking other incoming telemetry requests. This is critical for maintaining the 5-second telemetry cycle even when LLM generation is in progress.
+
+\section{Database Layer}
+
+The SQLite schema uses three primary tables:
+
+\begin{enumerate}
+\item \textbf{telemetry\_batches} --- stores all 23 \texttt{TelemetryBatch} fields plus a server-side \texttt{received\_at} timestamp. Indexed on \texttt{(player\_id, session\_id, window\_start)}.
+\item \textbf{player\_models} --- stores \texttt{PlayerModel} snapshots indexed on \texttt{(player\_id, session\_id, timestamp)}. Each telemetry POST triggers an upsert of the computed model.
+\item \textbf{narrative\_events} --- stores \texttt{NarrativeContent} records (action, content\_type, content, speaker, emotional\_tone, fallback flag) with foreign keys to session\_id. This log enables post-hoc analysis of which narrative actions were fired at what points in each session.
+\end{enumerate}
+
+SQLite was selected over PostgreSQL for simplicity of deployment (no external service required), study scale ($N = 50$ generates modest data volumes), and the single-writer access pattern of the study setup.
+
+\section{Player Modelling Implementation}
+
+The player modelling pipeline is implemented as three sequential classes called within the same request handler:
+
+\begin{lstlisting}[language=Python, caption={Player modelling pipeline flow.}]
+TelemetryBatch[] (from SQLite)
+  -> FeatureExtractor.extract()  -> dict[str, float] (11 features)
+  -> HexadProfiler.compute()     -> HexadProfile      (6 dims)
+  -> FlowClassifier.classify()   -> (FlowState, float) (state + conf)
+  -> PlayerModel (assembled)
+\end{lstlisting}
+
+The \texttt{FeatureExtractor} aggregates all \texttt{TelemetryBatch} records for the current session from SQLite before computing features, ensuring that features reflect the full session history rather than only the most recent window. This cumulative computation is appropriate for Hexad profiling (which requires sufficient behavioural evidence) while the \texttt{FlowClassifier} uses only the most recent window's features to classify the instantaneous state.
+
+A notable implementation detail is the denominator protection pattern applied throughout: \texttt{max(deaths, 1)}, \texttt{max(obj\_attempted, 1)}, etc. These guards prevent division by zero in the opening minutes of a session when many counters are still zero.
+
+\section{Narrative Pipeline Implementation}
+
+The narrative pipeline is invoked asynchronously following each player model update. The process follows four stages:
+
+\begin{enumerate}
+\item \textbf{Action selection:} The \texttt{NarrativeAgent.select\_action()} method constructs the 7-dimensional observation vector from the \texttt{PlayerModel} and calls \texttt{model.predict(obs, deterministic=False)}.
+\item \textbf{RAG retrieval:} The query string is constructed from the Flow state, current activity, and location to maximize retrieval relevance. The top-3 lore chunks are returned.
+\item \textbf{Prompt assembly:} The \texttt{PromptBuilder} combines the system prompt, player context, retrieved lore, episodic memory context, and action-specific instructions.
+\item \textbf{LLM generation:} The \texttt{OllamaClient} sends the prompt and returns the parsed \texttt{NarrativeContent}, with fallback handling for malformed or timed-out responses.
+\end{enumerate}
+
+Stochastic prediction (\texttt{deterministic=False}) is used at inference time to maintain behavioural diversity; deterministic prediction would always select the maximum-probability action, potentially producing repetitive narrative patterns.
+
+The importance score of 0.7 assigned to new memory events reflects a baseline estimate; a more sophisticated implementation could derive importance from the narrative action type (e.g., LORE\_REWARD events receive higher importance than NO\_CHANGE events).
+
+\section{RL Adaptation Implementation}
+
+The \texttt{NarrativeAdaptationEnv} is registered as a standard Gymnasium environment and trained using Stable-Baselines3 PPO. Table~\ref{tab:ppo_hyperparams} lists the hyperparameters.
+
+\begin{table}[H]
+\centering
+\caption{PPO hyperparameters.}
+\label{tab:ppo_hyperparams}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+Policy & MlpPolicy (2 $\times$ 64 hidden layers) \\
+Learning rate & $3 \times 10^{-4}$ \\
+n\_steps & 512 \\
+batch\_size & 64 \\
+n\_epochs & 10 \\
+gamma ($\gamma$) & 0.95 \\
+gae\_lambda & 0.95 \\
+clip\_range & 0.2 \\
+n\_envs (vectorized) & 4 \\
+total\_timesteps & 200,000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Training uses four parallel vectorized environments (\texttt{make\_vec\_env}) to improve sample efficiency. The trained model is saved to \texttt{./data/ppo\_narrative\_agent.zip} and loaded on subsequent server starts, avoiding the training overhead at inference time. Episode length is 360 steps (one step per 5-second telemetry window, corresponding to 30 minutes of gameplay).
+
+\section{Unity Plugin Implementation}
+
+The Unity plugin is structured as a UPM-compatible package. The \texttt{PlayerDataLogger} accumulates telemetry via direct field increments in \texttt{Update()} and fires the HTTP POST at fixed 5-second intervals using a Coroutine.
+
+The \texttt{NarrativeManager} uses a polling architecture: immediately following each telemetry POST's response, it fires a GET request to \texttt{/narrative/generate}. The 8-second Ollama generation timeout is handled by displaying no new content rather than blocking the game loop. The \texttt{ContentInjector} implements a state machine with three states: IDLE, DISPLAYING, and COOLING\_DOWN. Content queued during COOLING\_DOWN is held and injected after the 3-second minimum spacing, ensuring narrative delivery does not overwhelm the player during intense combat sequences.
+
+For the demo game integration, additional scripts bridge the game engine's event system to the plugin's telemetry API: \texttt{TelemetryHooks.cs} connects combat, quest, and dialogue events to the corresponding \texttt{PlayerDataLogger} recording methods, while \texttt{ExplorationTracker.cs} implements a grid-based tile exploration counter that updates the \texttt{tiles\_explored} field. \texttt{NarrativeUI.cs} provides the TMPro-based HUD panel with auto-dismiss and fade animations.
+
+\section{Testing and Validation}
+
+\textbf{Unit tests} were written using pytest covering: the \texttt{FeatureExtractor} (edge cases: empty batch list, zero-denominator fields, maximum value clamping), \texttt{HexadProfiler} (initialization with empty batches returns 0.5 defaults), \texttt{FlowClassifier} (boundary conditions at ratio 0.75 and 1.30, APATHY compound condition), and \texttt{compute\_reward} (all state transitions, streak bonus triggering, repetition penalty).
+
+\textbf{Integration tests} validated the end-to-end pipeline from a mock \texttt{TelemetryBatch} POST to a returned \texttt{NarrativeContent} JSON, confirming that Flow state correctly influences the generated tone and that the fallback mechanism activates when Ollama is unavailable.
+
+\textbf{Validation of the simulated MDP} was conducted by verifying that the trained PPO agent converged to a mean episodic reward substantially above zero (indicating that the agent learned to prefer helpful actions) and that the agent's action distribution in ANXIETY states was dominated by PROVIDE\_GUIDANCE and LOWER\_STAKES --- consistent with the design intention.
+
+\textbf{Lore retrieval validation} was conducted by manually querying the retriever with ten representative in-session queries and verifying that retrieved chunks were semantically relevant. All ten manual queries returned at least one clearly relevant chunk in the top-3 results, confirming that the all-MiniLM-L6-v2 model provides adequate semantic discrimination for the lore corpus.

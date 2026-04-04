@@ -1,0 +1,93 @@
+%##########################################################################
+% CHAPTER 1: INTRODUCTION
+%##########################################################################
+\chapter{Introduction}
+
+\section{Chapter Overview}
+
+This chapter introduces the research by outlining its central focus, motivation, and purpose. It begins with the background and context for narrative personalization in games, identifies the specific problem addressed, presents the research questions and objectives, discusses the significance and scope of the work, and concludes with an outline of the thesis structure. The chapter establishes the foundation upon which the subsequent literature review, methodology, implementation, and evaluation chapters build.
+
+\section{Background and Motivation}
+
+Games occupy a unique position in interactive media: they are the only narrative form in which the audience simultaneously controls the protagonist and shapes the story's unfolding. Yet despite the enormous expressive potential this interactivity affords, the vast majority of commercially released titles deliver largely identical narrative sequences to every player. The village elder delivers the same warning, the antagonist delivers the same monologue, and the quest log records the same objectives regardless of whether the player is a cautious explorer who reads every piece of environmental lore or an aggressive disruptor who skips dialogue and charges headlong into combat.
+
+This homogeneity is not a result of disinterest from game designers --- narrative branching is a well-recognized craft challenge --- but rather a structural consequence of the cost of authoring alternatives. Every branch, every personalized response, requires writing, voice-acting, and integration effort that scales combinatorially. The practical ceiling for authored branching in even the most narrative-ambitious titles (e.g., CD Projekt Red's \textit{Cyberpunk 2077} or Larian Studios' \textit{Baldur's Gate 3}) is reached long before true player-adaptive personalization becomes possible.
+
+The emergence of large language models (LLMs) capable of coherent long-form natural language generation, combined with advances in real-time player behaviour modelling and reinforcement learning-based policy optimization, suggests a new possibility: narrative that is \textit{generated}, rather than authored, in response to the individual player's demonstrated preferences, cognitive state, and engagement patterns \citep{brown2020language}. If such a system can be made reliable, grounded in lore-consistent content, and responsive to psychological signals of engagement, it could represent a qualitative shift in the nature of player experience.
+
+The motivation for this research is threefold. First, motivation research in psychology --- particularly Self-Determination Theory \citep{ryan2000self} --- demonstrates that perceived competence, autonomy, and relatedness are foundational to sustained intrinsic engagement, and narrative personalization is a direct mechanism for signalling each of these. Second, the commercial games industry has invested heavily in player analytics and telemetry infrastructure, yet this data is used almost exclusively for monetization and retention metrics rather than for real-time content adaptation. Third, the convergence of accessible RL frameworks (Stable-Baselines3; \citealp{raffin2021stable}), open-weight LLMs (Phi-3.5 Mini; \citealp{microsoft2024phi}), and semantic search tools (sentence-transformers; \citealp{wang2020minilm}) creates a technical environment in which building such a system is feasible within the scope of an undergraduate research project.
+
+This dissertation takes up that challenge. It presents a closed-loop plugin --- implementable within Unity --- that continuously profiles the player using a telemetry-derived Hexad player-type model \citep{tondello2016hexad} and a Flow state classifier grounded in Csikszentmihalyi's (\citeyear{csikszentmihalyi1990flow}) challenge--skill balance theory. A Proximal Policy Optimization (PPO; \citealp{schulman2017proximal}) agent selects among eight narrative modulation actions based on these real-time signals. A Retrieval-Augmented Generation (RAG) pipeline grounds the LLM's output in a structured lore corpus, and an episodic session memory component inspired by EM-LLM \citep{fountas2024episodic} ensures narrative continuity across a session. The resulting system is evaluated against a static narrative control in a between-subjects user study, measuring Flow experience, immersion, and perception of personalization using established psychometric instruments.
+
+\section{Problem Statement}
+
+The central problem this research addresses is the following: \textbf{current game narrative systems are static in the sense that they do not adapt their tone, urgency, or content to the psychological state and demonstrated preferences of the individual player in real time.} This creates a mismatch between player engagement state and narrative offering. A player experiencing BOREDOM --- whose challenge--skill ratio has fallen below a meaningful threshold --- continues to receive the same measured, low-stakes descriptions that a Flow-state player receives. A player in ANXIETY --- overwhelmed by challenge --- receives no additional guidance from the story world. A player whose behaviour reveals deep curiosity about lore receives the same minimal world description as one who ignores it entirely.
+
+The consequences of this mismatch are reduced engagement, diminished immersion, and missed opportunities to use narrative as a lever for returning players to a state of optimal experience. The problem is not merely aesthetic: motivation research \citep{ryan2000self} demonstrates that perceived competence, autonomy, and relatedness are foundational to sustained intrinsic engagement, and narrative personalization is a direct mechanism for signalling each of these.
+
+The challenge of solving this problem is threefold. First, reliable real-time player state inference requires robust signal processing from noisy behavioural telemetry. Second, LLM-generated narrative in games must be tightly constrained to avoid breaking fictional immersion through anachronism, fourth-wall violations, or lore inconsistency. Third, the adaptation policy must be learned rather than fully hand-crafted, because the mapping from player state to optimal narrative action is complex and context-dependent.
+
+\section{Research Gap}
+
+Existing approaches to narrative personalization in games fall into three broad categories, each of which leaves significant gaps that the present work addresses.
+
+First, \textit{authored branching systems} (e.g., Mass Effect, The Witcher series, Disco Elysium) provide the illusion of personalization through meaningful choices but are ultimately deterministic in their narrative delivery relative to choice history. These systems do not adapt to behavioural signals such as play pace, combat avoidance, or exploration rate --- they adapt only to explicit player-authored choices within a pre-specified decision space.
+
+Second, \textit{procedural narrative generation systems}, such as Tracery \citep{compton2015tracery} and the Expressionist framework \citep{kreminski2019evaluating}, demonstrated that grammatical expansion could produce contextually varied textual content. However, such systems still required extensive authoring of production rules and lacked the capacity to respond to the player's psychological state.
+
+Third, \textit{LLM-based narrative generation systems} such as PANGeA \citep{todd2024pangea} have demonstrated that LLMs can produce coherent, in-world narrative content when given sufficient contextual grounding. However, PANGeA does not integrate a real-time player model or an adaptive policy; its generation is procedural (driven by game state) rather than personalized (driven by player psychological state). Similarly, LIGS (CHI 2025) investigated LLM integration into game narrative pipelines with a focus on coherence, but without player modelling or RL-based adaptation.
+
+No prior work has integrated continuous Hexad profiling derived from behavioural telemetry, Flow-based RL reward shaping, RAG-grounded LLM generation, and episodic session memory into a single closed-loop system. The present work addresses this gap directly.
+
+\section{Research Questions}
+
+This dissertation is organized around three research questions:
+
+\begin{description}[leftmargin=1cm]
+\item[RQ1:] Can a closed-loop AI system driven by continuous Hexad profiling and Flow-state detection produce narrative that is perceived as more personalized than static pre-authored narrative?
+
+\item[RQ2:] Does PPO-driven narrative adaptation result in measurably higher Flow experience (as measured by the GEQ Flow subscale) compared to a control condition receiving static narrative?
+
+\item[RQ3:] How do players perceive and experience dynamically personalized narrative in terms of engagement and immersion?
+\end{description}
+
+RQ1 addresses the subjective perception of personalization. RQ2 targets the objective psychological measure of Flow, operationalized through a validated instrument. RQ3 is exploratory and captures nuances that quantitative measures may not surface.
+
+\section{Research Aim and Objectives}
+
+The overarching aim of this research is to demonstrate that a closed-loop, AI-driven narrative personalization system embedded within a game engine plugin can measurably improve player experience relative to static narrative delivery.
+
+The specific objectives are:
+
+\begin{enumerate}
+\item To design and implement a five-module pipeline that integrates telemetry collection, player modelling, narrative generation, RL-based adaptation, and in-game content injection within a single coherent system.
+\item To develop a method for deriving a six-dimensional Hexad player-type profile from behavioural telemetry without requiring a player questionnaire.
+\item To construct a Gymnasium-compatible MDP environment that models narrative adaptation as a sequential decision problem with a Flow-based reward signal.
+\item To build a RAG pipeline grounded in a structured game lore corpus that constrains LLM output to in-world content.
+\item To design and conduct a between-subjects user study ($N = 50$) using validated psychometric instruments to evaluate the system's impact on Flow, immersion, and perceived personalization.
+\item To contribute qualitative insight through reflexive thematic analysis of post-play interviews.
+\end{enumerate}
+
+\section{Significance of the Research}
+
+This research is significant for several reasons. First, it demonstrates the feasibility of integrating multiple AI techniques --- player modelling, reinforcement learning, retrieval-augmented generation, and episodic memory --- into a single, deployable game plugin. This integration has not been achieved in prior work and represents a practical contribution to the game development community.
+
+Second, the telemetry-derived Hexad profiling method addresses a practical barrier to player-type-adaptive game design: the requirement for pre-play questionnaires that disrupt the player experience and provide only static, one-time snapshots. By inferring player types from behavioural data collected during gameplay, the system enables continuous, unobtrusive profiling that updates as the player's engagement patterns evolve.
+
+Third, the use of PPO reinforcement learning for narrative action selection --- rather than mechanical difficulty adjustment --- extends the RL-for-games paradigm into the narrative domain. This reframing demonstrates that narrative tone and content selection can be formalized as a sequential decision problem amenable to policy optimization, opening a new design space for adaptive game narratives.
+
+Fourth, the evaluation design provides a rigorous mixed-methods framework --- combining validated psychometric instruments (GEQ, miniPXI) with qualitative thematic analysis --- that can serve as a template for future studies evaluating AI-generated game content.
+
+Finally, the work contributes to the broader discourse on AI and player experience by demonstrating that AI-driven personalization can operate within the latency and quality constraints of real-time gameplay, using only locally hosted, open-weight models without dependence on cloud services.
+
+\section{Scope of the Research}
+
+The scope of this work is bounded in several important respects. The testbed is a purpose-built 2D top-down RPG rather than a commercially released game; this ensures experimental control but limits ecological validity. The Hexad profiling method is rule-based and heuristic rather than a trained classifier; this is a deliberate design choice motivated by the cold-start constraint (no pre-existing player data) but introduces approximation error relative to ground-truth questionnaire-derived types.
+
+The LLM employed is Phi-3.5 Mini (3.8B parameters), a locally hosted model via Ollama. This choice prioritizes privacy and latency predictability over raw generation quality; larger cloud-hosted models would likely yield more fluent output but introduce dependency, cost, and data governance concerns. The PPO agent is trained on a simulated environment rather than directly on human play data, which means the learned policy reflects the simulator's transition dynamics rather than empirical player behaviour.
+
+The user study is bounded to $N = 50$, which is adequate for detecting medium-to-large effect sizes ($d \geq 0.5$) but would be insufficient to detect subtle effects. The study uses a between-subjects design, which eliminates carry-over effects but requires careful matching of conditions for comparable baseline experience. Results from Chapter~5 onward are presented as structured templates pending data collection.
+
+\section{Thesis Structure}
+
+The remainder of this thesis is structured as follows. Chapter~2 reviews the relevant literature across narrative personalization, player modelling, Flow theory, LLMs for games, reinforcement learning for adaptation, and episodic memory. Chapter~3 presents the research methodology in detail, covering the system architecture, each module's design, the testbed game, and the evaluation design including hypotheses, instruments, procedure, and analysis plan. Chapter~4 documents the technical implementation, including the technology stack, backend service, database layer, and Unity plugin. Chapter~5 presents the results of the user study (as structured placeholders pending data collection). Chapter~6 discusses the findings, contributions, limitations, and threats to validity. Chapter~7 concludes with a summary of contributions, future work directions, a reflective account of the research process, and closing remarks. Full questionnaire instruments, the API specification, and the MDP formal specification are provided in the appendices.

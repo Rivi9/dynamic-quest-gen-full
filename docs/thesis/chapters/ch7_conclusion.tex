@@ -1,0 +1,76 @@
+%##########################################################################
+% CHAPTER 7: CONCLUSION
+%##########################################################################
+\chapter{Conclusion}
+
+\section{Summary}
+
+This dissertation has presented a complete design, implementation, and evaluation methodology for an AI-driven closed-loop narrative personalization plugin for Unity games. The system integrates five modules --- telemetry collection, player modelling, narrative generation, RL adaptation, and content injection --- into a coherent pipeline that operates within 5-second adaptation cycles.
+
+The six principal contributions are: (1)~a method for deriving continuous Hexad player-type profiles from behavioural telemetry without requiring a player questionnaire; (2)~a RAG-grounded narrative generation pipeline using sentence-transformers cosine retrieval over a structured lore corpus; (3)~an importance-weighted episodic session memory that provides LLM narrative continuity across a play session; (4)~a PPO reinforcement learning agent trained to select among eight narrative tone actions based on player psychological state; (5)~a Flow-based MDP reward function operationalizing Csikszentmihalyi's challenge--skill balance theory; and (6)~a complete closed-loop integration of all five components within a deployable Unity plugin.
+
+The evaluation design --- a between-subjects study ($N = 50$) using the GEQ, miniPXI, and custom NPS-3 scale, supplemented by reflexive thematic analysis of post-play interviews --- provides a rigorous mixed-methods framework for assessing the system's impact on Flow experience, immersion, and perceived personalization.
+
+\section{Limitations}
+
+The key limitations of this work, discussed in detail in Section~6.4, include: the reliance on a simulated MDP for PPO training rather than real player data; the rule-based (rather than empirically validated) Hexad profiling; the constrained generation quality of the 3.8B-parameter LLM; the single-session study design; the simplified testbed game; and the modest sample size. These limitations are inherent to the scope of an undergraduate research project and define clear directions for future work.
+
+\section{Future Work}
+
+Several directions for future work present themselves.
+
+\textbf{Empirical validation of telemetry-derived Hexad profiling.} The most immediate extension is a validation study comparing telemetry-derived Hexad scores against matched questionnaire scores from the same participants, quantifying the construct validity of the behavioural proxy.
+
+\textbf{Online RL adaptation.} An online or hybrid approach --- in which the agent continues to update its policy based on real player interaction data --- would produce a policy increasingly tailored to the real game environment. Careful management of exploration--exploitation trade-offs would be necessary.
+
+\textbf{Larger LLMs and fine-tuning.} Replacing Phi-3.5 Mini with a larger model (e.g., Llama 3.1 8B or a fine-tuned narrative generation model) could substantially improve generation quality and character voice consistency.
+
+\textbf{Multi-session study.} A longitudinal study spanning three to five sessions per participant would reveal whether the personalization system produces cumulative benefits.
+
+\textbf{Evaluation in a commercial game context.} Collaborating with an independent game developer to deploy the plugin in an in-development commercial title would provide a more ecologically valid test.
+
+\textbf{Voice and audio integration.} Integrating text-to-speech generation with character-specific voice parameters would create a richer multimodal experience.
+
+\textbf{Explainability and player agency.} A transparency mode in which players can see why a particular narrative action was chosen could be studied as a mechanism for building player trust.
+
+\section{Reflective Report}
+
+This section provides a personal reflection on the research process, challenges faced, and lessons learned throughout the study.
+
+\subsection{Project Management and Planning}
+
+The project spanned approximately seven months, from initial literature review in September 2025 to final submission in April 2026. Early planning focused on defining the system architecture and identifying the key technical risks. The decision to use a locally hosted LLM (Ollama with Phi-3.5 Mini) rather than a cloud API was made early and proved to be one of the most consequential design choices: it eliminated network dependency and data governance concerns but introduced generation quality constraints that influenced the prompt engineering effort throughout the project.
+
+Time management was a persistent challenge. The implementation phase took longer than anticipated, primarily due to the complexity of integrating five distinct modules with different technology stacks (Python backend, C\# Unity plugin, Ollama inference server). Weekly logbook entries helped maintain accountability and provided a structured record of decisions and progress.
+
+\subsection{Technical Challenges and Learning}
+
+Several technical challenges required significant problem-solving effort. First, the original plan called for ChromaDB as the vector database for RAG, but Python 3.14 compatibility issues with ChromaDB's Pydantic v1 dependency necessitated a pivot to in-memory numpy-based cosine similarity search. This experience reinforced the importance of verifying dependency compatibility early in the project lifecycle.
+
+Second, designing the reward function for the PPO agent required iterating through several formulations. Early versions without the repetition penalty produced degenerate policies that repeatedly selected the same action regardless of state. Adding the penalty and the shaped rewards (streak bonus, transition bonus) was informed by reinforcement learning literature on reward shaping and required careful tuning to produce stable training.
+
+Third, ensuring that the LLM produced valid JSON output consistently was more challenging than anticipated. The combination of JSON format mode, explicit schema instructions in the prompt, and a parsing-with-fallback pipeline was the result of extensive trial and error.
+
+\subsection{Research Skills Development}
+
+This project significantly developed my research skills across several dimensions. Designing the mixed-methods evaluation --- including selecting validated instruments, specifying hypotheses, planning statistical analyses, and preparing an interview guide --- provided practical experience with research methodology that extended well beyond the technical implementation work. Learning to apply Reflexive Thematic Analysis \citep{braun2022thematic} and to plan for Bonferroni-corrected multiple comparisons were particularly valuable methodological skills.
+
+The literature review process taught me to read critically rather than summatively: to identify not just what previous work achieved but what it omitted, and to position my own contributions relative to those gaps. The discipline of maintaining a structured gap analysis table (Table~\ref{tab:related_work}) proved invaluable for articulating the novelty of the present work.
+
+\subsection{Ethical Awareness}
+
+Working with human participants heightened my awareness of ethical responsibilities in research. Designing the informed consent process, ensuring data anonymization, and planning the debrief procedure required careful consideration of participant welfare. The question of whether AI-driven narrative personalization constitutes a form of behavioural manipulation --- and how to communicate this transparently to participants --- is an ethical dimension that I had not fully considered at the outset of the project.
+
+\subsection{Key Takeaways}
+
+If I were to undertake a similar project again, I would make three changes. First, I would conduct a small-scale pilot study earlier in the project timeline to identify usability issues and calibrate the telemetry thresholds before committing to the full evaluation design. Second, I would invest more time in automated integration testing between the Python backend and Unity client, as manual testing of the WebSocket connection consumed considerable debugging time. Third, I would begin the literature review with a more systematic search strategy (e.g., using PRISMA guidelines) rather than the snowball approach I initially adopted, as the systematic approach would have surfaced relevant work more efficiently.
+
+Overall, this project has been the most technically ambitious and intellectually demanding work of my undergraduate degree. It required synthesizing knowledge from multiple domains --- reinforcement learning, natural language processing, game design, psychometrics, and research methodology --- into a single coherent system. The experience has confirmed my interest in pursuing research at the intersection of AI and interactive media and has equipped me with the technical and methodological skills to do so.
+
+\section{Closing Remarks}
+
+The aspiration behind this research is modest in scope but substantive in ambition: to demonstrate that the tools now available to AI researchers --- large language models, reinforcement learning, semantic retrieval --- can be composed into a practical system that makes games more attentive to the people who play them. The challenge is not merely technical but also philosophical: what does it mean for a game's story to understand a player? What behavioural signals are worth attending to, and what should be ignored? When does adaptation feel like personalization and when does it feel like surveillance?
+
+These questions are ultimately design and ethics questions as much as they are engineering questions, and the present work represents only an early step toward answering them. The closed-loop system described here is a proof of concept: a demonstration that the integration is feasible, that the components can communicate, and that the adaptation cycle can run within the latency constraints of real-time gameplay. Whether it produces experiences that players find genuinely enriched by the adaptation --- whether the personalization is felt rather than merely inferred --- is an empirical question that the evaluation study will begin to answer.
+
+The long arc of games as a medium bends toward greater responsiveness to individual players. Dynamic narrative personalization, grounded in psychological models and driven by learned adaptive policies, is one promising path along that arc.

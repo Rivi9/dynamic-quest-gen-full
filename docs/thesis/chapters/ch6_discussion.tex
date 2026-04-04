@@ -1,0 +1,70 @@
+%##########################################################################
+% CHAPTER 6: DISCUSSION
+%##########################################################################
+\chapter{Discussion}
+
+\section{Chapter Overview}
+
+This chapter interprets the results presented in Chapter~5, connecting the findings to the research questions, objectives, and existing literature. It discusses whether the outcomes support or contradict prior studies, identifies the original contributions of the work, acknowledges limitations, and evaluates threats to validity.
+
+\section{Interpretation of Quantitative Findings}
+
+The central prediction of the research --- that PPO-driven narrative adaptation would produce measurably higher Flow experience --- rests on the theoretical chain from the adaptation engine through the player modelling module to the GEQ instrument. If the PPO agent successfully learns to apply narratively appropriate actions in response to Flow state signals, and if those narrative interventions succeed in shifting the player's psychological state toward FLOW, then the accumulated Flow experience across the session should register as a higher GEQ Flow subscale score.
+
+\textit{[INSERT: Interpret the actual results when available. The following structures illustrate possible interpretations:]}
+
+\textbf{If H1 is supported:} The significant difference in GEQ Flow scores ($d$ = \textit{[INSERT]}) supports the core theoretical claim that real-time narrative personalization can improve Flow experience. The effect size is \textit{[magnitude]} by Cohen's (\citeyear{cohen1988statistical}) convention, suggesting that narrative adaptation is a meaningful lever for engagement even within a relatively short (30-minute) session. The convergent evidence from the behavioural metrics --- specifically the dialogue read ratio in the Experimental condition --- suggests that players were not merely reporting higher Flow retrospectively but were also demonstrably more engaged with the narrative content during play.
+
+\textbf{If H1 is not supported:} The absence of a significant difference challenges the assumption that within-session narrative adaptation produces observable Flow differences within a 30-minute session. Several explanations merit consideration. First, the PPO agent was trained on a simulated environment whose transition dynamics only approximately match real player behaviour; policy transfer to the real game environment may be limited. Second, the 30-minute session may be insufficient for the player modelling module to accumulate enough telemetry. Third, the effect of narrative tone on Flow may be smaller than anticipated relative to mechanical game design factors.
+
+\textit{[INSERT: Discuss H2 (Immersion) and H3 (Personalization) results in relation to each other and to H1.]}
+
+\section{Themes from Interviews}
+
+\textit{[INSERT: Discuss qualitative themes in relation to the quantitative results and existing literature.]}
+
+The interview data are expected to illuminate the mechanisms by which narrative adaptation influenced (or failed to influence) experience. A theme of \textbf{narrative responsiveness} --- players describing the story as attuned to their behaviour --- would provide direct qualitative support for the personalization hypothesis (H3). Conversely, a theme of \textbf{artificiality awareness} --- players noticing repetitive patterns, inconsistent tone, or implausible content --- would identify a key failure mode of the LLM generation pipeline.
+
+The Flow-related interview questions are expected to reveal whether narrative injections were perceived as disruptive or supportive of engagement. A recurring finding in studies of game storytelling is that narrative interruptions during high-engagement moments are perceived negatively even when the content is high quality. The \texttt{ContentInjector}'s 3-second spacing mechanism was designed to mitigate this, but interview data will reveal whether it was sufficient.
+
+\section{Novelty and Contributions}
+
+This work makes the following original contributions:
+
+\textbf{Contribution 1: Telemetry-derived Hexad profiling.} Prior work on Hexad-based game adaptation has relied exclusively on pre-play questionnaire scores \citep{tondello2016hexad}. The present system computes six-dimensional continuous Hexad profiles from behavioural telemetry, enabling within-session updating without any player self-report. The mapping from telemetry signals to Hexad dimensions (Table~\ref{tab:hexad}) provides a reusable operational template for game developers.
+
+\textbf{Contribution 2: RAG-grounded dynamic narrative.} While PANGeA \citep{todd2024pangea} demonstrated LLM-based procedural narrative grounded in prompt-delivered context, the present work extends this to a dynamic retrieval paradigm in which the specific lore passages delivered to the LLM are selected at runtime based on the player's current context. This ensures semantic relevance to the player's location and activity.
+
+\textbf{Contribution 3: Episodic session memory in the LLM prompt.} The implementation of importance-weighted episodic memory inspired by EM-LLM \citep{fountas2024episodic} enables narrative continuity across a play session. To the author's knowledge, this is the first application of episodic memory compression to real-time game narrative generation.
+
+\textbf{Contribution 4: PPO for narrative action selection.} Reinforcement learning has been applied extensively to mechanical game adaptation (DDA) but not, to the author's knowledge, to narrative action selection. Framing narrative tone selection as an RL problem represents a meaningful conceptual advance over rule-based narrative adaptation systems.
+
+\textbf{Contribution 5: Flow-based MDP reward.} The reward function directly operationalizes Csikszentmihalyi's (\citeyear{csikszentmihalyi1990flow}) challenge--skill balance theory, providing a principled theoretical grounding for the adaptation objective.
+
+\textbf{Contribution 6: Complete closed-loop integration.} The five-module architecture is novel in its end-to-end integration: from raw telemetry capture in Unity, through behavioural feature extraction and player typing, through RL action selection, through RAG-grounded LLM generation, to in-game content injection --- all within a single deployable plugin.
+
+\section{Limitations}
+
+Several limitations merit acknowledgment.
+
+\textbf{Simulation fidelity.} The PPO agent is trained on a simulated environment with hand-specified transition probabilities ($p = 0.75$ for successful helpful actions). Real player behaviour is substantially more complex; the simulation's Markovian assumption is almost certainly violated in practice, as player engagement trajectories have temporal dependencies extending well beyond the current state.
+
+\textbf{Rule-based Hexad profiling.} The mapping from telemetry signals to Hexad dimensions is based on theoretical alignment rather than empirical validation against questionnaire-derived ground truth. Players may exhibit behavioural patterns that are systematically misclassified --- for instance, a player who moves slowly due to hardware input lag rather than deliberate exploration will register high \texttt{explore\_rate} and be profiled as an Explorer.
+
+\textbf{LLM generation quality.} Phi-3.5 Mini (3.8B parameters) is a small language model constrained by its capacity relative to larger frontier models. The quality of generated narrative --- its fluency, creativity, and character voice consistency --- is limited by the model size.
+
+\textbf{Single-session study.} The study captures a single 30-minute session per participant. Long-term effects of narrative personalization cannot be assessed within this design.
+
+\textbf{Testbed ecological validity.} The testbed game is a simplified prototype. Findings may not generalize to commercially developed games with more complex narrative architectures.
+
+\textbf{Sample size.} With $n = 25$ per condition, the study is powered to detect medium effects ($d \approx 0.5$) but not small effects. The convenience sample also limits demographic diversity.
+
+\section{Threats to Validity}
+
+\textbf{Internal validity.} The primary threat is demand characteristics: participants who infer they are in the experimental condition may respond more favourably. The blind design mitigates but does not eliminate this threat.
+
+\textbf{Construct validity.} The GEQ Flow subscale measures retrospective self-report of flow, not flow during gameplay. The absence of a physiological measure limits confidence that the score reflects the within-session psychological state.
+
+\textbf{External validity.} The testbed game and student convenience sample limit generalizability.
+
+\textbf{Statistical conclusion validity.} With $N = 50$, the study is not robustly powered for small effect sizes, and Bonferroni correction reduces power further.

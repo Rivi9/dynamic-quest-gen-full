@@ -1,0 +1,181 @@
+%--------------------------------------------------------------------------
+% TITLE PAGE
+%--------------------------------------------------------------------------
+\begin{titlepage}
+\centering
+
+\includegraphics[height=1.5cm]{TitleFigs/rgu_logo.jpg}\hspace{3cm}
+\includegraphics[height=1.5cm, width=4cm]{TitleFigs/iit_logo.png}
+
+\vspace{1.6cm}
+
+{\Large \textbf{Informatics Institute of Technology}}
+
+\vspace{0.4cm}
+
+{\large In Collaboration with}
+
+\vspace{0.4cm}
+
+{\Large \textbf{Robert Gordon University, Aberdeen, Scotland}}
+
+\vspace{2cm}
+
+{\Large\bfseries
+AI-Driven Dynamic Narrative Personalization in Games:\\[6pt]
+A Closed-Loop Plugin Using Hexad Player Modeling,\\[6pt]
+RAG-Grounded LLM Generation, and PPO Reinforcement Learning
+}
+
+\vspace{1.5cm}
+
+{\Large Final Year Thesis by}
+
+\vspace{0.4cm}
+
+{\Large \textbf{Rivindu Bopage}}
+
+\vspace{1cm}
+
+{\small RGU ID -- 2312553}\\
+{\small IIT ID -- 20220580}
+
+\vspace{1cm}
+
+{\Large Supervised by}
+
+\vspace{0.4cm}
+
+{\large \textbf{[Supervisor Name]}}
+
+\vspace{1cm}
+
+{\large April 2026}
+
+\vfill
+
+\small
+Submitted in partial fulfilment of the requirements for the\\
+BSc.\ (Hons) in Artificial Intelligence and Data Science at the Robert Gordon University, Aberdeen, UK.
+
+\end{titlepage}
+
+%--------------------------------------------------------------------------
+% FRONT MATTER — Roman numerals
+%--------------------------------------------------------------------------
+\clearpage
+\pagenumbering{gobble}
+\clearpage
+\pagenumbering{roman}
+\setcounter{page}{1}
+\pagestyle{fancy}
+
+%--------------------------------------------------------------------------
+% DECLARATION
+%--------------------------------------------------------------------------
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+
+I confirm that the work contained in this BSc project report has been composed solely by myself and has not been accepted in any previous application for a degree. All sources of information have been specifically acknowledged and all verbatim extracts are distinguished by quotation marks.\\[1cm]
+
+\noindent Date: \hrulefill \\[0.5cm]
+\noindent Student's Name: \hrulefill \\[2cm]
+
+\noindent The above student carried out his research project under my supervision.\\[1cm]
+
+\noindent Date: \hrulefill \\[0.5cm]
+\noindent Supervisor's Name: \hrulefill
+
+\clearpage
+
+%--------------------------------------------------------------------------
+% SPER FORM (placeholder — include signed PDF)
+%--------------------------------------------------------------------------
+% Uncomment the line below and provide the signed SPER form PDF:
+% \includepdf[pages=-,fitpaper=true,pagecommand={}]{EthicsForm.pdf}
+\chapter*{SPER Form}
+\addcontentsline{toc}{chapter}{SPER Form}
+\textit{[Insert signed SPER Ethics Form here. Use \texttt{\textbackslash includepdf} to embed the signed PDF.]}
+\clearpage
+
+%--------------------------------------------------------------------------
+% ABSTRACT
+%--------------------------------------------------------------------------
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Narrative personalization in games --- the capacity of a game's story to adapt meaningfully to individual player behaviour --- remains an under-explored intersection of artificial intelligence, human--computer interaction, and game design. Most commercial games deliver identical narrative content regardless of how a player engages with the world, foregoing the well-established link between personalized experience and intrinsic motivation.
+
+This dissertation presents the design, implementation, and evaluation of a closed-loop Unity plugin for real-time dynamic narrative personalization. The system integrates five tightly coupled modules: (1)~a telemetry collector that streams 23~behavioural signals from the game client every five seconds; (2)~a player modelling service that derives an 11-feature representation, a six-dimensional continuous Hexad player-type profile, and a Flow state classification (FLOW, BOREDOM, ANXIETY, APATHY) from those signals; (3)~a narrative generation service that employs Retrieval-Augmented Generation (RAG) over a structured lore corpus using the sentence-transformers all-MiniLM-L6-v2 model together with an episodic session memory store; (4)~an adaptation engine based on Proximal Policy Optimization (PPO), trained via Stable-Baselines3 over a custom Gymnasium Markov Decision Process environment; and (5)~a Unity Content Injection Module that surfaces the generated narrative inside a 2D top-down RPG testbed.
+
+A key novelty is the derivation of Hexad player-type scores entirely from gameplay telemetry --- without requiring the player to complete a questionnaire --- enabling continuous, within-session profiling. The PPO agent selects among eight narrative actions (e.g., PROVIDE\_GUIDANCE, ADD\_MYSTERY, INCREASE\_URGENCY) based on the current Flow state and Hexad profile, with a reward function shaped around challenge--skill balance. A cold-start heuristic governs the first 120~seconds before the learned policy activates.
+
+The system is evaluated through a between-subjects user study ($N = 50$; 25~Experimental, 25~Control). The primary dependent variable is the Flow subscale of the Game Experience Questionnaire (GEQ); secondary measures include the GEQ Immersion subscale, the custom three-item Narrative Personalization Scale (NPS-3), and the miniPXI player experience inventory. Qualitative data are gathered through semi-structured interviews analysed using Reflexive Thematic Analysis \citep{braun2022thematic}. Results are pending collection and are presented as structured placeholders.
+
+The work makes six original contributions: telemetry-derived Hexad profiling, RAG-grounded narrative generation, episodic session memory in the LLM prompt, PPO for narrative action selection, a Flow-based MDP reward, and a complete closed-loop integration of all five modules within a single game plugin.
+
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} narrative personalization, player modelling, Hexad typology, Flow theory, reinforcement learning, large language models, retrieval-augmented generation, game experience, Unity plugin.
+
+\clearpage
+
+%--------------------------------------------------------------------------
+% ACKNOWLEDGEMENTS
+%--------------------------------------------------------------------------
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+
+I would like to express my sincere gratitude to my supervisor, [Supervisor Name], for their invaluable guidance, constructive feedback, and consistent support throughout the duration of this research project. Their expertise and encouragement were instrumental in shaping the direction of this work.
+
+I extend my thanks to the academic staff at Informatics Institute of Technology and Robert Gordon University for providing the academic foundation and resources that made this project possible. I am also grateful to the participants who volunteered their time for the user study; their contributions are central to the evaluation of this work.
+
+I would like to acknowledge the open-source communities behind the tools that underpin this system --- FastAPI, Stable-Baselines3, Gymnasium, Ollama, and sentence-transformers --- whose freely available, well-documented software made this research feasible within the scope of an undergraduate project.
+
+Finally, I thank my family and friends for their patience, understanding, and encouragement throughout this academic year.
+
+\clearpage
+
+%--------------------------------------------------------------------------
+% TABLE OF CONTENTS, LIST OF FIGURES, LIST OF TABLES
+%--------------------------------------------------------------------------
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+\listoftables
+\newpage
+
+%--------------------------------------------------------------------------
+% LIST OF ABBREVIATIONS
+%--------------------------------------------------------------------------
+\chapter*{List of Abbreviations}
+\addcontentsline{toc}{chapter}{List of Abbreviations}
+
+\begin{longtable}{@{}p{3.5cm} p{10cm}@{}}
+\abbrev{AI}{Artificial Intelligence}
+\abbrev{API}{Application Programming Interface}
+\abbrev{CORS}{Cross-Origin Resource Sharing}
+\abbrev{DDA}{Dynamic Difficulty Adjustment}
+\abbrev{DPM}{Damage Per Minute}
+\abbrev{DV}{Dependent Variable}
+\abbrev{GEQ}{Game Experience Questionnaire}
+\abbrev{HTTP}{Hypertext Transfer Protocol}
+\abbrev{JSON}{JavaScript Object Notation}
+\abbrev{LLM}{Large Language Model}
+\abbrev{MDP}{Markov Decision Process}
+\abbrev{miniPXI}{Mini Player Experience Inventory}
+\abbrev{NPC}{Non-Player Character}
+\abbrev{NPS-3}{Narrative Personalization Scale (3-item)}
+\abbrev{PPO}{Proximal Policy Optimization}
+\abbrev{RAG}{Retrieval-Augmented Generation}
+\abbrev{RL}{Reinforcement Learning}
+\abbrev{RPG}{Role-Playing Game}
+\abbrev{SDT}{Self-Determination Theory}
+\abbrev{SQL}{Structured Query Language}
+\abbrev{TMPro}{TextMeshPro}
+\abbrev{UI}{User Interface}
+\abbrev{UPM}{Unity Package Manager}
+\abbrev{WS}{WebSocket}
+\end{longtable}
+
+\clearpage

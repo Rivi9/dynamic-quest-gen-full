@@ -1,0 +1,260 @@
+%==========================================================================
+% APPENDICES
+%==========================================================================
+\appendix
+
+\chapter{Code Repository}
+\label{app:code}
+
+The complete source code for this project is available at the following repository:
+
+\begin{center}
+\url{https://github.com/Rivi9/dynamic-quest-gen}
+\end{center}
+
+The repository contains:
+\begin{itemize}
+\item \texttt{backend/} --- FastAPI Python backend (player modelling, narrative generation, RL adaptation)
+\item \texttt{unity-plugin/} --- UPM package (telemetry collection, narrative management, content injection)
+\item \texttt{demo-game/} --- Unity 6 testbed project
+\item \texttt{lore/} --- Game world lore documents (RAG corpus)
+\item \texttt{evaluation/} --- Questionnaires, interview guide, and statistical analysis scripts
+\item \texttt{data/} --- Trained PPO model weights and SQLite database
+\end{itemize}
+
+\textit{Note: The full source code is not reproduced in this thesis per submission guidelines. Please refer to the repository for implementation details.}
+
+
+\chapter{GEQ Core Module}
+\label{app:geq}
+
+The Game Experience Questionnaire Core Module as administered in this study. Reproduced from \citet{ijsselsteijn2013geq} for research purposes.
+
+\textbf{Scale:} 0 = Not at all, 1 = Slightly, 2 = Moderately, 3 = Fairly, 4 = Very much
+
+\textit{Please answer each question based on your experience during the game session you just played.}
+
+\begin{longtable}{@{}clc@{}}
+\toprule
+\textbf{\#} & \textbf{Item} & \textbf{Scale} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{\#} & \textbf{Item} & \textbf{Scale} \\
+\midrule
+\endhead
+1 & I felt content & 0--4 \\
+2 & I felt skillful & 0--4 \\
+3 & I was absorbed in the game & 0--4 \\
+4 & I felt happy & 0--4 \\
+5 & This game gave me a bad mood & 0--4 (R) \\
+6 & I thought it was fun & 0--4 \\
+7 & I was fully occupied with the game & 0--4 \\
+8 & I felt annoyed & 0--4 (R) \\
+9 & I found the game satisfying & 0--4 \\
+10 & I felt frustrated & 0--4 (R) \\
+11 & It felt like a whole new world & 0--4 \\
+12 & I lost track of time & 0--4 \\
+13 & I felt bored & 0--4 (R) \\
+14 & I felt good & 0--4 \\
+15 & I was good at this game & 0--4 \\
+16 & I felt tired & 0--4 (R) \\
+17 & I felt imaginative & 0--4 \\
+18 & I felt that I could explore things & 0--4 \\
+19 & I felt like I had to do things quickly & 0--4 \\
+20 & I had fun with others & 0--4 \\
+21 & I felt challenged & 0--4 \\
+22 & I felt that time went by quickly & 0--4 \\
+23 & I felt pressured & 0--4 (R) \\
+24 & I felt competent & 0--4 \\
+25 & I felt engrossed & 0--4 \\
+26 & I felt bothered by aspects of the game & 0--4 (R) \\
+27 & I was deeply concentrated in the game & 0--4 \\
+28 & I forgot everything around me & 0--4 \\
+29 & I felt pleased & 0--4 \\
+30 & I felt completely focused on the game & 0--4 \\
+31 & I enjoyed the game & 0--4 \\
+32 & I felt imaginative & 0--4 \\
+33 & I felt adventurous & 0--4 \\
+\bottomrule
+\end{longtable}
+
+\textit{(R) = reverse-scored}
+
+\vspace{0.5cm}
+\textbf{Subscale scoring:}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Subscale} & \textbf{Items} & \textbf{Notes} \\
+\midrule
+Flow (Primary DV, H1) & 5(R), 13(R), 25, 28, 31 & Mean of 5 items \\
+Immersion (Secondary DV, H2) & 3, 12, 18, 19, 27, 30 & Mean of 6 items \\
+Positive Affect & 1, 4, 8(R), 20, 29 & Mean of 5 items \\
+Negative Affect & 10, 16, 23, 26 & Mean of 4 items \\
+Tension & 7, 22, 25 & Mean of 3 items \\
+Competence & 2, 15, 17, 21, 24 & Mean of 5 items \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\chapter{miniPXI Questionnaire}
+\label{app:minipxi}
+
+Citation: \citet{vornhagen2022minipxi}
+
+\textbf{Scale:} 1 = Strongly Disagree \ldots{} 7 = Strongly Agree
+
+\begin{longtable}{@{}cl@{}}
+\toprule
+\textbf{\#} & \textbf{Item} \\
+\midrule
+\endfirsthead
+1 & I felt in control of my character/avatar \\
+2 & I felt a sense of mastery when completing challenges \\
+3 & I found the game world interesting to explore \\
+4 & I was curious about what would happen next in the game \\
+5 & I felt like the game narrative pulled me in \\
+6 & I had a sense of presence in the game world \\
+7 & I felt free to make meaningful choices \\
+8 & The game felt meaningful to me \\
+9 & I had positive emotions while playing \\
+10 & I felt excited during the game \\
+11 & Overall, I enjoyed playing this game \\
+\bottomrule
+\end{longtable}
+
+\textbf{Subscales:} Mastery (1, 2); Curiosity (3, 4); Immersion (5, 6); Autonomy (7, 8); Positive Affect (9, 10, 11). Total score: mean of all 11 items.
+
+
+\chapter{Interview Guide}
+\label{app:interview}
+
+\textbf{Study:} AI-Driven Dynamic Narrative Personalization in Games \\
+\textbf{Duration:} $\sim$20 minutes \\
+\textbf{Analysis method:} Reflexive Thematic Analysis \citep{braun2022thematic}
+
+\textbf{Before the interview:} Obtain signed consent; remind participant there are no right or wrong answers; start audio recording.
+
+\vspace{0.5cm}
+\textbf{Section 1 --- General Experience (5 min)}
+\begin{enumerate}
+\item Can you walk me through what you remember most about the game experience?
+\item How would you describe the story and the way it unfolded for you?
+\item Were there any moments that stood out to you, positively or negatively?
+\end{enumerate}
+
+\textbf{Section 2 --- Narrative and Personalization (8 min)}
+\begin{enumerate}[resume]
+\item Did the narrative feel connected to the way you were playing? Can you give an example?
+\item Were there moments where the story surprised you --- or felt unexpectedly relevant?
+\item Did any NPCs or dialogue feel particularly fitting or particularly out of place?
+\item \textit{(Experimental only)} Did you notice the story adapting to you? How did that feel?
+\item \textit{(Control only)} How well did the story match your play style?
+\end{enumerate}
+
+\textbf{Section 3 --- Flow and Engagement (5 min)}
+\begin{enumerate}[resume]
+\item Were there moments where you felt in ``the zone'' --- neither too stressed nor too bored?
+\item Were there moments where the game felt too easy, too hard, or just right?
+\item How did the story contribute to those moments of engagement?
+\end{enumerate}
+
+\textbf{Section 4 --- Closing (2 min)}
+\begin{enumerate}[resume]
+\item Is there anything about the game or narrative you would like to add?
+\item Any suggestions for improving the experience?
+\end{enumerate}
+
+\textbf{Probes:} ``Can you say more about that?'' / ``What do you mean when you say [X]?'' / ``When did that happen in the game?'' / ``How did that make you feel?''
+
+
+\chapter{API Specification}
+\label{app:api}
+
+The FastAPI backend exposes the following REST and WebSocket endpoints:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}llp{6cm}@{}}
+\toprule
+\textbf{Method} & \textbf{Path} & \textbf{Description} \\
+\midrule
+POST & /telemetry/batch & Submit telemetry window; returns PlayerModel \\
+GET & /narrative/generate & Retrieve generated narrative for session \\
+GET & /player/model/\{player\_id\} & Get current PlayerModel \\
+GET & /player/hexad/\{player\_id\} & Get current HexadProfile \\
+DELETE & /session/\{session\_id\} & Clear session data \\
+WebSocket & /ws/telemetry/\{session\_id\} & Low-latency telemetry stream \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{NarrativeContent response example:}
+
+\begin{lstlisting}[language={}]
+{
+  "action_taken": "PROVIDE_GUIDANCE",
+  "content_type": "dialogue",
+  "content": "The path below is treacherous. If you
+    still carry the torch, keep it lit.",
+  "speaker": "Commander Varis",
+  "emotional_tone": "tense",
+  "lore_refs": [],
+  "fallback": false
+}
+\end{lstlisting}
+
+All endpoints return standard HTTP status codes. 422 for malformed requests (Pydantic validation). 503 if Ollama is unreachable (returns fallback NarrativeContent with \texttt{"fallback": true}).
+
+
+\chapter{MDP Formal Specification}
+\label{app:mdp}
+
+\textbf{Formal MDP tuple:} $(S, A, T, R, \gamma)$
+
+\textbf{State space $S$:} Box(7,) $\in [0, 1]^7$
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}clcl@{}}
+\toprule
+\textbf{Dim} & \textbf{Symbol} & \textbf{Range} & \textbf{Description} \\
+\midrule
+$s_0$ & flow\_score & \{0.1, 0.2, 0.3, 1.0\} & Encoded Flow state \\
+$s_1$ & csr\_norm & [0, 1] & challenge\_skill\_ratio / 3.0 \\
+$s_2$ & $h_{\text{explorer}}$ & [0, 1] & Hexad Explorer score \\
+$s_3$ & $h_{\text{socializer}}$ & [0, 1] & Hexad Socializer score \\
+$s_4$ & $h_{\text{achiever}}$ & [0, 1] & Hexad Achiever score \\
+$s_5$ & $h_{\text{disruptor}}$ & [0, 1] & Hexad Disruptor score \\
+$s_6$ & $t_{\text{progress}}$ & [0, 1] & session\_elapsed / 1800 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Reward function $R(s, a, s')$:}
+
+\[
+R = R_{\text{state}}(s') + R_{\text{step}} + R_{\text{streak}}(s', n) + R_{\text{transition}}(s, s') + R_{\text{repetition}}(a, a_{[-3:]})
+\]
+
+Where:
+\begin{itemize}
+\item $R_{\text{state}}$: FLOW $= +1.0$, BOREDOM $= -0.3$, ANXIETY $= -0.5$, APATHY $= -0.8$
+\item $R_{\text{step}} = -0.05$
+\item $R_{\text{streak}} = +0.20$ if $s' = \text{FLOW}$ and $n > 2$
+\item $R_{\text{transition}} = +0.30$ if $s \in \{\text{ANXIETY}, \text{BOREDOM}\}$ and $s' = \text{FLOW}$
+\item $R_{\text{repetition}} = -0.15$ if all last 3 actions identical
+\end{itemize}
+
+\textbf{Discount factor $\gamma$:} 0.95
+
+\textbf{Episode length:} 360 steps (30 minutes at 5-second intervals)
+
+\textbf{Training:} PPO (Stable-Baselines3 v2.x), 200,000 timesteps, 4 parallel environments.

@@ -1,0 +1,115 @@
+%##########################################################################
+% CHAPTER 2: LITERATURE REVIEW
+%##########################################################################
+\chapter{Literature Review}
+
+\section{Chapter Overview}
+
+This chapter critically reviews the existing literature across six domains that inform the design of the proposed system: narrative personalization in games, player modelling approaches, Flow theory in game design, large language models for game narrative, reinforcement learning for game adaptation, and episodic memory for LLMs. For each domain, the chapter examines key contributions, identifies methodological strengths and limitations, and positions the current work relative to the state of the art. The chapter concludes with a synthesis of the research gap that this dissertation addresses, supported by a comparative table of related work.
+
+\section{Narrative Personalization in Games}
+
+The question of how games might deliver individualized narrative experiences has been explored for several decades. Early work on interactive narrative focused on structural approaches: drama management systems such as the Fa\c{c}ade project \citep{mateas2003facade} attempted to guide story structure toward dramatically satisfying outcomes by monitoring player actions and intervening in the plot. These systems were computationally tractable but brittle --- they required exhaustive hand-authoring of alternative branches and could not generalize to novel player behaviours. Riedl and Bulitko (\citeyear{riedl2013interactive}) provided a comprehensive survey of intelligent interactive narrative systems, identifying the tension between authorial control and player agency as the central design challenge.
+
+More recent work has approached the problem from a content generation perspective. Procedural narrative generation systems, such as Tracery \citep{compton2015tracery} and the Expressionist framework \citep{kreminski2019evaluating}, demonstrated that grammatical expansion could produce contextually varied textual content. However, such systems still required extensive authoring of production rules and lacked the capacity to respond to the player's psychological state. Short (\citeyear{short2019procedural}) argued that procedural generation without a model of player intent risks producing content that is varied but meaningless --- quantity of output without quality of relevance.
+
+The commercial industry has converged on a middle path: narrative choice systems with authored branches (e.g., \textit{Mass Effect}, \textit{The Witcher} series, \textit{Disco Elysium}) provide the illusion of personalization through meaningful choices but are ultimately deterministic in their narrative delivery relative to choice history. These systems do not adapt to behavioural signals such as play pace, combat avoidance, or exploration rate --- they adapt only to explicit player-authored choices within a pre-specified decision space. The cost of authoring these branches is substantial: \textit{Disco Elysium}, widely regarded as one of the most narratively ambitious RPGs, contains approximately one million words of authored text, yet still delivers a fixed narrative structure relative to the player's explicit choices.
+
+The emerging paradigm, exemplified by PANGeA \citep{todd2024pangea}, uses generative AI to produce narrative content at runtime, opening the possibility of adaptation that is both infinite in variety and grounded in the game's content universe. The current work situates itself at the intersection of this generative paradigm and player modelling: the narrative is not merely generated but selected and styled in response to a continuous model of the individual player's state.
+
+\section{Player Modelling Approaches}
+
+\subsection{Bartle Taxonomy and Its Limitations}
+
+Bartle's (\citeyear{bartle1996hearts}) taxonomy of MUD player types --- Achievers, Explorers, Socializers, and Killers --- was the first systematic attempt to categorize players by behavioural motivation. Developed through observation of Multi-User Dungeon players in the 1980s, the taxonomy introduced the foundational insight that players seek qualitatively different experiences from the same game.
+
+Despite its wide adoption in game design pedagogy, the Bartle taxonomy has several well-documented limitations. First, it is categorical rather than continuous: a player is assigned to one type, when empirical evidence suggests players express multiple motivations simultaneously and in varying proportions \citep{yee2006motivations}. Second, the taxonomy was derived from a narrow population playing a specific genre (text-based MUDs) and has questionable generalizability to modern games. Third, the categories are not mutually exclusive and lack operationalized measurement criteria. Finally, type assignment relies on self-report questionnaires (the Bartle Test), which introduce social desirability bias and are one-time snapshots rather than dynamic, within-session measures.
+
+\subsection{Hexad Typology}
+
+Tondello et al.\ (\citeyear{tondello2016hexad}) developed the Gamification User Types Hexad Scale as a theoretically grounded alternative to Bartle's taxonomy. Rooted in Self-Determination Theory \citep{ryan2000self}, the Hexad framework identifies six player types: Achievers (motivated by mastery and progress), Explorers (motivated by discovery and curiosity), Socializers (motivated by social interaction and belonging), Free Spirits (motivated by autonomy and self-expression), Disruptors (motivated by challenging the status quo), and Philanthropists (motivated by giving and altruism). Unlike Bartle's types, Hexad scores are continuous (typically measured on a seven-point Likert scale per item) and can be meaningfully combined.
+
+The original Hexad scale is a 24-item self-report questionnaire, validated for gamification contexts with acceptable reliability (Cronbach's alpha typically exceeding 0.70 per subscale). Subsequent work has applied Hexad profiling to adaptive game design, recommendation systems, and educational technology \citep{hamari2014does}, establishing it as the de facto standard for research-grade player-type assessment.
+
+The critical limitation for the current work is the reliance on a pre-play questionnaire. A questionnaire-derived profile is a static snapshot, captured before any gameplay, that cannot update as the player's engagement patterns evolve during a session. Moreover, administering a 24-item questionnaire before play introduces friction that reduces ecological validity. The present work addresses this limitation by inferring Hexad-analogous continuous scores directly from behavioural telemetry --- a novel contribution detailed in Section~3.3.
+
+\subsection{Data-Driven Player Modelling}
+
+The player2vec line of research (2024) demonstrates the application of Transformer-based self-supervised learning to player behaviour sequences. Analogous to word2vec embeddings for natural language tokens, player2vec encodes sequences of in-game actions into dense low-dimensional representations that cluster players by behavioural similarity without requiring labelled training data. Zhu et al.\ (\citeyear{zhu2023player}) provided a comprehensive survey of player modelling approaches for interactive narrative, identifying the shift from questionnaire-based to behaviour-based modelling as a key trend.
+
+The current work draws conceptual inspiration from player2vec --- specifically, the notion that a session embedding can summarize a player's behavioural trajectory --- but implements a simpler rule-based approach rather than a trained Transformer. This pragmatic choice is motivated by the cold-start constraint: a Transformer session embedder requires a substantial corpus of historical play sequences to produce meaningful representations, which is unavailable for a first-session player using a newly deployed plugin.
+
+\section{Flow Theory in Game Design}
+
+Csikszentmihalyi's (\citeyear{csikszentmihalyi1990flow}) theory of Flow describes a psychological state of optimal experience characterized by complete absorption in a challenging activity, loss of self-consciousness, and distorted time perception. Flow arises at the intersection of high challenge and high skill: when challenge substantially exceeds skill, the result is anxiety; when skill substantially exceeds challenge, the result is boredom; and when both are absent, the result is apathy. Nakamura and Csikszentmihalyi (\citeyear{nakamura2002concept}) subsequently refined the model, emphasizing that Flow is not a binary state but a continuum influenced by multiple contextual factors.
+
+In game design, Flow theory has been influential since Chen's (\citeyear{chen2007flow}) canonical analysis of game flow, which argued that the dynamic difficulty adjustment (DDA) mechanisms present in many games (e.g., adaptive enemy scaling, hint systems) are implicitly Flow-optimization mechanisms. The challenge--skill ratio has since become a standard construct for computational Flow modelling.
+
+The present work operationalizes Csikszentmihalyi's model through a rule-based classifier that maps the \texttt{challenge\_skill\_ratio} (computed from behavioural telemetry) to one of four states: FLOW (ratio in [0.75, 1.30]), ANXIETY (ratio $>$ 1.30), BOREDOM (ratio $<$ 0.75), and APATHY (a joint condition of high idle time, low dialogue engagement, and low challenge--skill ratio). These thresholds are informed by prior work on computational Flow detection \citep{yannakakis2009realtime} and are detailed formally in Section~3.3.4. Critically, the reward function of the PPO adaptation engine is directly shaped around these states, making Flow the central organizing principle of the adaptation objective.
+
+\section{Large Language Models for Game Narrative}
+
+\subsection{PANGeA (AAAI AIIDE 2024)}
+
+Todd et al.'s (\citeyear{todd2024pangea}) Procedural Artificial Narrative using Generative AI (PANGeA) represents the most directly relevant antecedent work for the narrative generation component of the current system. PANGeA employs an LLM to generate narrative content procedurally, grounded in a structured game knowledge base delivered through the prompt. The key insight from PANGeA is that LLMs can produce coherent, in-world narrative content when given sufficient contextual grounding --- but require careful prompt engineering and content validation to avoid outputs that break the fictional frame.
+
+PANGeA does not, however, integrate a real-time player model or an adaptive policy. Its narrative generation is procedural (driven by game state) rather than personalized (driven by player psychological state). The current work extends the PANGeA paradigm by adding the player modelling and RL adaptation layers that PANGeA lacks.
+
+\subsection{LIGS (CHI 2025)}
+
+The LLM-Integrated Game Storytelling (LIGS) system, published at CHI 2025, investigated the integration of LLMs into game narrative pipelines with a focus on maintaining narrative coherence across extended play sessions. LIGS introduced mechanisms for tracking narrative state across sessions and using that state to condition generation, anticipating the episodic memory approach of the current work.
+
+A notable contribution of LIGS was its evaluation methodology: it employed player experience questionnaires to compare AI-generated narrative against human-authored content, finding that players could not reliably distinguish the two when the LLM was appropriately constrained. This finding provides empirical support for the feasibility of LLM-based narrative personalization as a subjectively valid approach.
+
+\subsection{Prompt Grounding and Retrieval-Augmented Generation}
+
+The challenge of keeping LLM outputs factually and fictionally consistent with a specific game world has motivated the adoption of Retrieval-Augmented Generation (RAG; \citealp{lewis2020retrieval}) in game narrative contexts. RAG supplements the LLM prompt with retrieved passages from a curated knowledge base, effectively providing the model with relevant context at generation time rather than requiring this knowledge to be baked into model weights through fine-tuning.
+
+For game narrative, RAG offers a particularly attractive trade-off: the lore corpus can be maintained and updated independently of the model, and retrieval ensures that only contextually relevant lore is included in the prompt, avoiding context window saturation. The Transformer-based architecture underlying modern LLMs \citep{vaswani2017attention} processes fixed-size context windows, making efficient context usage critical for generation quality. The current system employs the sentence-transformers all-MiniLM-L6-v2 model \citep{wang2020minilm} to embed both the lore corpus and generation queries into a 384-dimensional semantic space, with top-$k$ cosine similarity retrieval ($k = 3$) providing the relevant passages.
+
+\section{Reinforcement Learning for Game Adaptation}
+
+\subsection{Dynamic Difficulty Adjustment}
+
+Dynamic Difficulty Adjustment (DDA) has been an active research area since Hunicke and Chapman (\citeyear{hunicke2004ai}) demonstrated that adaptive difficulty improved player retention in \textit{Super Mario Bros}. Computational approaches to DDA have employed rule-based systems, Bayesian models, and neural networks to infer the appropriate challenge level from behavioural signals and adjust game parameters accordingly \citep{lopes2017adaptive}. The predominant formulation is as a feedback control problem: the challenge level is a controlled variable, player engagement state is observed, and the controller minimizes the deviation from a target engagement state.
+
+The present work extends the DDA paradigm in two important respects. First, the adaptation target is not mechanical difficulty (enemy health, spawn rate, puzzle complexity) but \textit{narrative content}: the tone, urgency, and type of narrative delivery. Second, the adaptation mechanism is a learned policy rather than a hand-crafted controller. These extensions transform DDA from a mechanical tuning problem into a narrative and psychological design problem.
+
+\subsection{PPO and Stable-Baselines3}
+
+Proximal Policy Optimization (PPO; \citealp{schulman2017proximal}) is a policy gradient reinforcement learning algorithm that achieves reliable performance across a broad range of environments through a clipped surrogate objective that prevents destructively large policy updates. PPO has become a standard baseline in both academic RL research and practical game-playing applications, owing to its relative simplicity, sample efficiency, and stability compared to earlier policy gradient methods \citep{mnih2015human}.
+
+Stable-Baselines3 \citep{raffin2021stable} provides production-quality PyTorch implementations of PPO and other RL algorithms, with interfaces compatible with the Gymnasium (formerly OpenAI Gym; \citealp{brockman2016openai}) environment specification. The current work employs Stable-Baselines3 v2.x with the MlpPolicy architecture, training over 200,000 timesteps in a custom Gymnasium environment that simulates narrative adaptation episodes. The use of Stable-Baselines3 ensures reproducibility and provides a well-tested optimization implementation.
+
+\section{Episodic Memory for LLMs}
+
+Fountas et al.\ (\citeyear{fountas2024episodic}) introduced EM-LLM, an architecture for endowing LLMs with human-like episodic memory. The system partitions a long context stream into discrete memory events, scores them by importance and surprise, and selectively retrieves the most relevant events for inclusion in future prompts. This approach enables a form of infinite context through principled compression: rather than attending to every prior interaction, the model recalls the events most salient to the current context.
+
+The current work incorporates a lightweight episodic memory inspired by EM-LLM. The \texttt{EpisodicMemory} class maintains up to ten narrative events, each scored by importance, and evicts the least important event when capacity is exceeded. At generation time, the top five events by importance score are retrieved and formatted as a context block in the LLM prompt. This ensures narrative continuity --- the generated content acknowledges prior story events --- without saturating the context window. The simplification from EM-LLM's full architecture is appropriate given the relatively short session duration (30~minutes) and the modest number of narrative events generated per session (approximately 15--20).
+
+\section{Research Gap and Positioning}
+
+Table~\ref{tab:related_work} summarizes the key related works and their coverage of the dimensions relevant to this study.
+
+\begin{table}[H]
+\centering
+\caption{Summary of related work on narrative personalization and player modelling.}
+\label{tab:related_work}
+\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Work} & \textbf{Player} & \textbf{Flow} & \textbf{LLM} & \textbf{RAG} & \textbf{Episodic} & \textbf{Complete} \\
+ & \textbf{Model} & \textbf{Reward} & \textbf{Gen.} & & \textbf{Memory} & \textbf{Loop} \\
+\midrule
+PANGeA \citep{todd2024pangea} & No & No & Yes & Partial & No & No \\
+LIGS (CHI 2025) & No & No & Yes & No & Partial & No \\
+DDA \citep{hunicke2004ai} & Behav. & Implicit & No & No & No & No \\
+player2vec (2024) & Deep & No & No & No & No & No \\
+EM-LLM \citep{fountas2024episodic} & No & No & Yes & No & Yes & No \\
+\textbf{This work} & \textbf{Hexad+} & \textbf{Explicit} & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} \\
+ & \textbf{Flow} & & \textbf{(RAG)} & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+No prior work has integrated continuous Hexad profiling derived from telemetry, Flow-based RL reward, RAG-grounded LLM generation, and episodic session memory into a single closed-loop system. The present work addresses this gap by combining all six components into a deployable Unity plugin, evaluated through a rigorous mixed-methods study design.

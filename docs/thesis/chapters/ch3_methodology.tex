@@ -1,0 +1,372 @@
+%##########################################################################
+% CHAPTER 3: METHODOLOGY
+%##########################################################################
+\chapter{Methodology}
+
+\section{Chapter Overview}
+
+This chapter presents the research methodology in detail. It begins with the overall research design and philosophical positioning, then systematically describes each of the five system modules: telemetry collection, player modelling, narrative generation, RL-based adaptation, and Unity plugin design. The chapter then describes the testbed game environment and concludes with the full evaluation design, including hypotheses, instruments, procedure, ethical considerations, and analysis plan. The methodology follows a mixed-methods approach \citep{creswell2017mixed}, combining a controlled between-subjects experiment with qualitative interview analysis.
+
+\section{Research Design Overview}
+
+The research adopts a mixed-methods design combining a controlled between-subjects experiment with a qualitative interview study. The experimental component enables causal inference about the effect of the AI-driven personalization system on player experience, while the qualitative component captures the lived experience of personalization that quantitative measures may not fully represent.
+
+The between-subjects design was chosen over a within-subjects design to eliminate order effects and carry-over: a player who first experiences adaptive narrative and then static narrative (or vice versa) would bring expectations and memory from the first condition into the second. With a between-subjects design, each participant experiences only one condition, removing this contamination at the cost of requiring a larger sample and careful matching.
+
+The experimental condition (Experimental) deploys the full five-module AI system. The control condition (Control) replaces the Narrative Generation Service and Adaptation Engine with a \texttt{StaticNarrativeContent} ScriptableObject that delivers pre-authored narrative content in response to the same game triggers, with no player-adaptive behaviour. All other aspects of the game session --- environment, objectives, NPC placement, session duration --- are identical across conditions. This design isolates the effect of the adaptive narrative system from confounding factors related to game design or content quality differences.
+
+\section{System Architecture}
+
+The system is organized as five modules in a closed-loop pipeline. Figure~\ref{fig:architecture} describes the architecture and the data flows between components.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{2cm}
+\textit{[Insert system architecture diagram here --- five-module closed-loop pipeline showing: Unity Client (PlayerDataLogger) $\rightarrow$ FastAPI Backend (/telemetry/batch) $\rightarrow$ Player Modelling Service $\rightarrow$ Adaptation Engine (PPO) $\rightarrow$ Narrative Generation Service (RAG + LLM) $\rightarrow$ Unity Client (NarrativeManager + ContentInjector) $\rightarrow$ Player $\rightarrow$ Unity Client]}
+\vspace{2cm}}}
+\caption{High-level closed-loop architecture showing the five-module pipeline and data flows between components.}
+\label{fig:architecture}
+\end{figure}
+
+The pipeline operates as follows. The Unity \texttt{PlayerDataLogger} aggregates behavioural signals over five-second windows and transmits a \texttt{TelemetryBatch} to the FastAPI backend via HTTP POST (with WebSocket support for lower-latency streaming). The Player Modelling Service processes incoming batches: the \texttt{FeatureExtractor} computes eleven normalized features, the \texttt{HexadProfiler} derives the six-dimensional continuous Hexad profile, and the \texttt{FlowClassifier} assigns a Flow state. The resulting \texttt{PlayerModel} is passed to the \texttt{NarrativeAgent}, which selects a \texttt{NarrativeAction} using either the cold-start heuristic (first 120~seconds) or the trained PPO policy. The Narrative Generation Service uses the selected action to query the \texttt{LoreRetriever} (RAG), consults the \texttt{EpisodicMemory}, assembles the full prompt through the \texttt{PromptBuilder}, and requests generation from the Ollama-hosted LLM. The resulting \texttt{NarrativeContent} is returned to the Unity client and injected at the appropriate in-game display point.
+
+\section{Player Modelling Module}
+
+\subsection{Telemetry Collection}
+
+The telemetry system captures 23 behavioural fields per five-second window. Table~\ref{tab:telemetry} lists the complete schema.
+
+\begin{longtable}{@{}p{4cm} p{1.5cm} p{7.5cm}@{}}
+\caption{TelemetryBatch schema (23 fields).} \label{tab:telemetry} \\
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\endhead
+player\_id & str & Unique player identifier \\
+session\_id & str & Unique session identifier \\
+window\_start & float & Window start time (Unix timestamp) \\
+window\_end & float & Window end time (Unix timestamp) \\
+kills & int & Enemy kills in window \\
+deaths & int & Player deaths in window \\
+damage\_taken & float & Total damage received \\
+damage\_dealt & float & Total damage inflicted \\
+abilities\_used & int & Ability activations \\
+abilities\_hit & int & Abilities that connected \\
+objectives\_completed & int & Objectives completed \\
+objectives\_attempted & int & Objectives attempted \\
+tiles\_explored & int & Map tiles visited \\
+total\_tiles & int & Total traversable tiles (default 100) \\
+npc\_interactions\_voluntary & int & Voluntary (unsolicited) NPC interactions \\
+dialogue\_lines\_shown & int & Dialogue lines displayed \\
+dialogue\_lines\_skipped & int & Dialogue lines skipped by player \\
+lore\_items\_read & int & Lore collectibles read \\
+lore\_items\_found & int & Lore collectibles discovered \\
+idle\_seconds & float & Seconds with no player input \\
+session\_elapsed & float & Total elapsed session time (seconds) \\
+current\_location & str & Scene/zone identifier \\
+current\_objective & str & Active quest objective identifier \\
+\bottomrule
+\end{longtable}
+
+The five-second window granularity balances responsiveness (enabling sub-minute adaptation cycles) against noise sensitivity (single-frame events are smoothed over the window). In practice, the system accumulates a sliding window of recent batches before computing the feature vector, allowing multi-window averages to further smooth transient spikes.
+
+\subsection{Feature Extraction (11 Features)}
+
+The \texttt{FeatureExtractor} aggregates one or more \texttt{TelemetryBatch} records into eleven normalized scalar features, each clipped to [0, 1] (or [0, 3] for the \texttt{challenge\_skill\_ratio}). Table~\ref{tab:features} presents the computation formulae.
+
+\begin{table}[H]
+\centering
+\caption{Eleven extracted features and computation formulae.}
+\label{tab:features}
+\small
+\begin{tabular}{@{}p{3.5cm} p{6cm} p{3.5cm}@{}}
+\toprule
+\textbf{Feature} & \textbf{Formula} & \textbf{Notes} \\
+\midrule
+kd\_ratio & clip(kills / max(deaths, 1) / 5.0, 0, 1) & Norm.\ at 5:1 K/D \\
+objective\_rate & clip(obj\_comp / max(obj\_att, 1), 0, 1) & Completion proportion \\
+explore\_rate & clip(tiles\_explored / total\_tiles, 0, 1) & Map coverage \\
+dialogue\_engage & clip(1 $-$ skipped / max(shown, 1), 0, 1) & 1 = reads all \\
+ability\_accuracy & clip(hit / max(used, 1), 0, 1) & Combat precision \\
+damage\_taken\_norm & clip(dmg / (elapsed\_min + 1) / 200, 0, 1) & DPM normalized \\
+idle\_ratio & clip(idle\_s / elapsed, 0, 1) & Fraction idle \\
+lore\_engage\_rate & clip(read / max(found, 1), 0, 1) & Lore depth \\
+skill\_score & 0.35 kd + 0.30 obj + 0.20 acc + 0.15(1$-$idle) & Composite skill \\
+challenge\_score & 0.50 dmg + 0.30(1$-$obj) + 0.20 death\_ratio & Composite challenge \\
+challenge\_skill\_ratio & clip(challenge / max(skill, $10^{-6}$), 0, 3) & Core Flow signal \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The \texttt{skill\_score} composite weights combat effectiveness (\texttt{kd\_ratio}, \texttt{ability\_accuracy}) most heavily, followed by objective completion and attention (inverse \texttt{idle\_ratio}). The \texttt{challenge\_score} composite weights damage pressure most heavily, followed by objective failure rate and death rate. Dividing challenge by skill yields the \texttt{challenge\_skill\_ratio}, which operationalizes Csikszentmihalyi's (\citeyear{csikszentmihalyi1990flow}) challenge--skill balance axis.
+
+\subsection{Hexad Profile Computation (6 Dimensions)}
+
+The \texttt{HexadProfiler} computes six continuous scores in [0, 1] from accumulated telemetry, each representing the strength of a Hexad player-type signal. Table~\ref{tab:hexad} shows the computation weights.
+
+\begin{table}[H]
+\centering
+\caption{Hexad dimension computation weights from telemetry signals.}
+\label{tab:hexad}
+\small
+\begin{tabular}{@{}p{2.5cm} p{7cm} p{3.5cm}@{}}
+\toprule
+\textbf{Dimension} & \textbf{Formula} & \textbf{Interpretation} \\
+\midrule
+Achiever & 0.70 $\times$ obj\_rate + 0.30 $\times$ norm(kills, 20) & Objective + combat \\
+Explorer & 0.50 $\times$ explore\_rate + 0.50 $\times$ lore\_rate & Map + lore coverage \\
+Socializer & 0.60 $\times$ norm(vol\_npc, 10) + 0.40 $\times$ dialogue & Seeks NPCs + reads \\
+Free Spirit & 0.50 $\times$ explore\_rate + 0.50 $\times$ (1 $-$ obj\_rate) & Explores off-path \\
+Disruptor & 0.65 $\times$ norm(kills, 20) + 0.15 $\times$ norm(deaths, 10) + 0.20 $\times$ norm(dmg, 1000) & Aggressive combat \\
+Philanthropist & 0.60 $\times$ dialogue\_engage + 0.40 $\times$ lore\_rate & Narrative engagement \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The mapping from behavioural signals to Hexad dimensions was established through a principled alignment process guided by the original Hexad motivation descriptions \citep{tondello2016hexad}: Achievers seek mastery and progress (captured by objective completion and combat effectiveness); Explorers seek discovery (captured by map and lore coverage); Socializers seek connection (captured by voluntary NPC interaction and dialogue engagement); Free Spirits resist imposed structure (captured by exploration uncorrelated with objective completion); Disruptors challenge systems (captured by aggressive combat behaviour); Philanthropists give and share (captured by engagement with narrative and lore content).
+
+All profiles are initialized to 0.5 (neutral) in the absence of data, preventing cold-start artefacts from biasing early narrative selection.
+
+\subsection{Flow State Classification (MDP States)}
+
+The \texttt{FlowClassifier} implements a decision-tree classifier over the \texttt{challenge\_skill\_ratio}, \texttt{idle\_ratio}, and \texttt{dialogue\_engage\_rate} features. Table~\ref{tab:flow_rules} formalizes the rules.
+
+\begin{table}[H]
+\centering
+\caption{Flow state classification rules (evaluated in priority order).}
+\label{tab:flow_rules}
+\small
+\begin{tabular}{@{}clll@{}}
+\toprule
+\textbf{Priority} & \textbf{Condition} & \textbf{State} & \textbf{Confidence} \\
+\midrule
+1 (highest) & idle $>$ 0.40 AND dialogue $<$ 0.30 AND ratio $<$ 0.60 & APATHY & 0.70 \\
+2 & ratio $<$ 0.75 & BOREDOM & 0.60 + (0.75 $-$ ratio) $\times$ 0.80 \\
+3 & ratio $>$ 1.30 & ANXIETY & 0.60 + (ratio $-$ 1.30) $\times$ 0.40 \\
+4 (default) & 0.75 $\leq$ ratio $\leq$ 1.30 & FLOW & max(0.55, 1.0 $-$ $|$ratio $-$ 1.0$|$ $\times$ 1.2) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+APATHY is classified first because it represents a qualitatively distinct disengagement pattern (high inactivity + low narrative interaction + low challenge) that would otherwise be misclassified as BOREDOM on the ratio criterion alone. The confidence scoring for BOREDOM and ANXIETY is proportional to the distance from the FLOW band boundary, reflecting that states further from the boundary are classified with higher certainty. FLOW confidence is highest when the ratio is closest to 1.0 (perfect challenge--skill balance).
+
+\section{Narrative Generation Module}
+
+\subsection{RAG Pipeline}
+
+The \texttt{LoreRetriever} implements in-memory semantic search using the sentence-transformers all-MiniLM-L6-v2 model, which produces 384-dimensional L2-normalized embeddings. The lore corpus is pre-indexed at startup by chunking the world, character, and quest lore documents by paragraph (double-newline delimiters) and embedding each chunk. At retrieval time, the query is embedded and cosine similarities are computed against all stored embeddings through a dot product (since all vectors are unit-normalized, cosine similarity equals the dot product). The top $k = 3$ chunks by similarity are returned and formatted as bullet points in the LLM user prompt.
+
+This design was chosen over a persistent vector database (e.g., ChromaDB, Pinecone) for two reasons: Python 3.14 compatibility issues with ChromaDB's Pydantic v1 dependency, and the relatively small lore corpus size (three files, approximately 30 paragraphs total) which renders the overhead of a full vector database unnecessary. In-memory retrieval at this corpus size is effectively instantaneous.
+
+\subsection{Episodic Session Memory}
+
+The \texttt{EpisodicMemory} class maintains a capped list of \texttt{MemoryEvent} records, each comprising a text description, an importance score in [0, 1], and a timestamp. When the list exceeds the maximum capacity of ten events, it is sorted by importance in descending order and truncated to the top ten. This importance-weighted eviction ensures that the most narratively significant events are retained even as minor events accumulate.
+
+At prompt construction time, the top five events by importance score are selected and formatted as a context block, providing the LLM with a compressed narrative history that enables references to past events and prevents temporal inconsistency.
+
+\subsection{Dynamic Prompt Construction}
+
+The \texttt{PromptBuilder} assembles a two-message prompt (system + user) for the Ollama API. The system prompt encodes the LLM's role (narrative writer for the game world), output length constraints (2--4 sentences for dialogue, 1--2 for descriptions), format requirements (valid JSON only, specific schema), and the emotional tone mapped from the current Flow state:
+
+\begin{itemize}
+\item ANXIETY: ``urgent and supportive --- the player is struggling''
+\item BOREDOM: ``exciting and surprising --- inject energy''
+\item FLOW: ``immersive and atmospheric --- maintain the experience''
+\item APATHY: ``intriguing and mysterious --- re-engage the player''
+\end{itemize}
+
+The user prompt injects: the player's current Flow state and challenge--skill ratio; the current activity (IN\_COMBAT, EXPLORING, IN\_DIALOGUE, IDLE); session elapsed time; the Hexad profile percentages; the selected NarrativeAction with definitions; the current location and active quest stage; the three retrieved lore chunks; the episodic memory context; and explicit content constraints (no real-world references, no anachronisms, no fourth-wall breaks, character voice descriptions).
+
+\subsection{LLM Integration (Ollama / Phi-3.5 Mini)}
+
+The \texttt{OllamaClient} sends the assembled prompt to a locally hosted Ollama instance using the \texttt{/api/chat} endpoint. The primary model is Phi-3.5 Mini (3.8B parameters; \citealp{microsoft2024phi}), with Llama 3.2 3B as a configured fallback. The generation parameters are: temperature 0.75, top\_p 0.90, maximum tokens 200, JSON format mode enabled. The 8-second HTTP timeout ensures that a slow or stalled generation does not block the main game loop.
+
+When the LLM response is malformed JSON, contains a fallback signal, or the request times out, the \texttt{OllamaClient} returns a pre-authored fallback string corresponding to the requested \texttt{NarrativeAction}. These fallback strings are minimal, tonally appropriate responses that maintain narrative coherence without exposing the player to system failure artefacts.
+
+\section{Adaptation Engine (MDP + PPO)}
+
+\subsection{MDP Formulation}
+
+The narrative adaptation problem is formalized as a Markov Decision Process $(S, A, T, R, \gamma)$ implemented as a Gymnasium environment.
+
+\textbf{State space $S$:} A Box observation space of shape (7,) with all values in [0, 1]. Table~\ref{tab:mdp_state} defines the seven dimensions.
+
+\begin{table}[H]
+\centering
+\caption{MDP observation vector (7 dimensions).}
+\label{tab:mdp_state}
+\small
+\begin{tabular}{@{}clp{7cm}@{}}
+\toprule
+\textbf{Index} & \textbf{Signal} & \textbf{Description} \\
+\midrule
+0 & flow\_score & Encoded Flow state (FLOW=1.0, BOREDOM=0.3, ANXIETY=0.2, APATHY=0.1) \\
+1 & csr\_norm & challenge\_skill\_ratio / 3.0 \\
+2 & hexad\_explorer & Explorer dimension score \\
+3 & hexad\_socializer & Socializer dimension score \\
+4 & hexad\_achiever & Achiever dimension score \\
+5 & hexad\_disruptor & Disruptor dimension score \\
+6 & session\_progress & session\_elapsed / 1800.0 (normalized to 30-min max) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Action space $A$:} A Discrete(8) action space corresponding to the eight \texttt{NarrativeAction} values. Table~\ref{tab:actions} summarizes the actions.
+
+\begin{table}[H]
+\centering
+\caption{Eight narrative actions with descriptions and intended effects.}
+\label{tab:actions}
+\small
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Idx} & \textbf{Action} & \textbf{Intended Effect} \\
+\midrule
+0 & LOWER\_STAKES & Reduce narrative tension; provide respite \\
+1 & RAISE\_STAKES & Increase narrative urgency and weight \\
+2 & ADD\_MYSTERY & Introduce a curiosity hook or unexplained element \\
+3 & ADD\_HUMOR & Provide comic relief to reduce tension \\
+4 & PROVIDE\_GUIDANCE & Give struggling player directional narrative support \\
+5 & INCREASE\_URGENCY & Re-energize a bored or disengaged player \\
+6 & LORE\_REWARD & Deliver a lore discovery payoff for curious players \\
+7 & NO\_CHANGE & Suppress narrative injection; maintain current experience \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Transition dynamics $T$:} The simulated training environment models stochastic Flow state transitions. When the agent selects a ``helpful'' action for the current state (e.g., ANXIETY $\rightarrow$ \{PROVIDE\_GUIDANCE, LOWER\_STAKES\}), the environment transitions to FLOW with probability 0.75 or remains in the current state with probability 0.25. This stochasticity prevents the policy from memorizing a deterministic mapping and encourages robust adaptation.
+
+\textbf{Discount factor $\gamma$:} 0.95, reflecting moderate preference for near-term reward while maintaining long-horizon planning.
+
+\subsection{Reward Function Design}
+
+The reward function is defined over (prev\_state, new\_state, action, steps\_in\_state, last\_3\_actions) and comprises five components, detailed in Table~\ref{tab:reward}.
+
+\begin{table}[H]
+\centering
+\caption{Reward function components and values.}
+\label{tab:reward}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Component} & \textbf{Value} & \textbf{Trigger} \\
+\midrule
+State reward (FLOW) & $+1.0$ & new\_state == FLOW \\
+State reward (BOREDOM) & $-0.3$ & new\_state == BOREDOM \\
+State reward (ANXIETY) & $-0.5$ & new\_state == ANXIETY \\
+State reward (APATHY) & $-0.8$ & new\_state == APATHY \\
+Step penalty & $-0.05$ & Every step \\
+Flow streak bonus & $+0.20$ & FLOW AND steps\_in\_state $>$ 2 \\
+Transition bonus & $+0.30$ & prev $\in$ \{ANXIETY, BOREDOM\} AND new == FLOW \\
+Repetition penalty & $-0.15$ & All 3 recent actions identical \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The state rewards reflect the severity ordering of non-Flow states: APATHY is penalized most heavily because it represents the most concerning disengagement. The step penalty provides constant pressure toward action efficiency. The Flow streak bonus reinforces sustained optimal experience. The transition bonus provides additional shaping reward for key recovery transitions. The repetition penalty discourages degenerate policies.
+
+\subsection{Cold-Start Heuristic}
+
+For the first 120~seconds of a session, or when the PPO model is unavailable, the \texttt{NarrativeAgent} falls back to a deterministic heuristic policy:
+
+\begin{itemize}
+\item ANXIETY $\rightarrow$ PROVIDE\_GUIDANCE
+\item BOREDOM $\rightarrow$ INCREASE\_URGENCY
+\item APATHY $\rightarrow$ ADD\_MYSTERY
+\item FLOW $\rightarrow$ NO\_CHANGE
+\end{itemize}
+
+The 120-second threshold allows the player sufficient time to engage with the game world before the RL policy takes effect, giving the player modelling module time to accumulate meaningful telemetry.
+
+\section{Unity Plugin Design}
+
+The Unity plugin comprises three C\# components: \texttt{PlayerDataLogger}, \texttt{NarrativeManager}, and \texttt{ContentInjector}.
+
+\texttt{PlayerDataLogger} is a MonoBehaviour that maintains running accumulators for all 23 telemetry fields. Every five seconds, it serializes the accumulated values into a \texttt{TelemetryBatch} JSON object and dispatches it to the FastAPI backend via an async HTTP POST. It exposes a public API for game systems to register events: \texttt{RecordKill()}, \texttt{RecordDeath()}, \texttt{RecordDialogueShown()}, and others. This event-based registration model decouples the telemetry system from specific game mechanics, making the plugin applicable to any Unity game that exposes these event hooks.
+
+\texttt{NarrativeManager} polls the \texttt{/narrative/generate} endpoint following each telemetry transmission. \texttt{ContentInjector} maps \texttt{NarrativeContentType} to the appropriate UI mechanism: dialogue content is routed to the DialoguePanel, description content to the DescriptionPanel, and quest updates to the QuestLog. The injector implements a content queue with a 3-second minimum spacing between consecutive injections to prevent narrative overcrowding.
+
+For the Control condition, the \texttt{NarrativeManager} is replaced by a \texttt{StaticNarrativeManager} that reads from a \texttt{StaticNarrativeContent} ScriptableObject and fires narrative events at scripted triggers with no player-state dependency.
+
+\section{Testbed Game Design}
+
+The testbed is a 2D top-down RPG built in Unity 6 LTS. The game world encompasses a warzone setting --- the Contested Vale --- a once-fertile trade corridor now fought over by two factions. The world is described in structured lore documents that serve as the RAG corpus.
+
+The game world features three navigable areas:
+
+\begin{enumerate}
+\item \textbf{Commander Varis's Post} --- a fortified camp at the northern edge serving as the starting area. Varis is the primary quest giver: a methodical, unsentimental military commander who gives orders without explaining them. Players who engage extensively with Varis register high Achiever signals.
+
+\item \textbf{The Contested Zone} --- a combat-focused area containing enemy units and environmental hazards. Players who clear this area efficiently register high Achiever and Disruptor signals; players who explore its periphery register Explorer signals.
+
+\item \textbf{The Waystone / Chronicler's Camp} --- a neutral area where the Chronicler, a scholar who has observed the Vale for thirty years, provides lore and context. The presence of lore collectibles creates a natural Explorer/Philanthropist signal divergence.
+\end{enumerate}
+
+Three NPCs populate the world: Commander Varis (primary quest giver, military voice), the Chronicler (lore source, academic voice), and Sera the Merchant (supply trader, pragmatic voice). The main quest (Clear the Advance) guides players through the combat zone, while a collection quest (Salvage the Fallen) encourages exploration. A standard play session is approximately 25--30 minutes.
+
+\section{Evaluation Design}
+
+\subsection{Research Hypotheses}
+
+The following directional hypotheses are tested:
+
+\begin{description}
+\item[H1:] Participants in the Experimental condition will score significantly higher on the GEQ Flow subscale than participants in the Control condition.
+\item[H2:] Participants in the Experimental condition will score significantly higher on the GEQ Immersion subscale than participants in the Control condition.
+\item[H3:] Participants in the Experimental condition will score significantly higher on the NPS-3 Narrative Personalization Scale than participants in the Control condition.
+\end{description}
+
+H1 is designated the primary hypothesis because Flow is the direct optimization target of the adaptation engine.
+
+\subsection{Participants and Recruitment}
+
+A total of $N = 50$ participants are recruited (25 Experimental, 25 Control) via convenience sampling through university mailing lists and gaming society channels. Inclusion criteria: aged 18 or over; self-reported experience playing RPG or action-adventure games; no prior exposure to the testbed game. An a priori power analysis for Welch's independent-samples $t$-test targeting $d = 0.5$ (medium effect), $\alpha = 0.05$ (two-tailed), and $1 - \beta = 0.80$ yields a required sample size of approximately 51 total participants \citep{faul2007gpower}, indicating that $N = 50$ is marginally below the strict threshold but remains reasonable given practical constraints.
+
+Participants are randomly assigned to conditions using a balanced random allocation procedure. No block randomization by demographic is applied, given the expected homogeneity of the university convenience sample.
+
+\subsection{Instruments}
+
+\textbf{Game Experience Questionnaire (GEQ) --- Core Module.} The GEQ \citep{ijsselsteijn2013geq} is a 33-item instrument measuring seven dimensions of game experience on a 0--4 scale. The primary DV is the GEQ \textbf{Flow subscale} (items 5, 13, 25, 28, 31; items 5 and 13 reverse-scored). The secondary DV is the GEQ \textbf{Immersion subscale} (items 3, 12, 18, 19, 27, 30).
+
+\textbf{miniPXI --- Player Experience Inventory (Short Form).} The miniPXI \citep{vornhagen2022minipxi} is an 11-item instrument on a 1--7 scale covering six player experience dimensions. The total score (mean of all 11 items) is used as a holistic player experience index.
+
+\textbf{Narrative Personalization Scale (NPS-3).} The NPS-3 is a custom three-item scale on a 1--7 Likert scale: (1) ``The story felt tailored to how I was playing,'' (2) ``The narrative responded to my choices and actions,'' and (3) ``The game seemed to understand what kind of player I am.'' Cronbach's alpha will be reported; if $\alpha < 0.70$, items will be analysed individually.
+
+\textbf{Behavioural Metrics (from telemetry).} Three behavioural metrics derived from telemetry serve as objective secondary measures: voluntary NPC interactions, dialogue read ratio, and exploration coverage.
+
+\subsection{Procedure}
+
+Each participant session follows a standardized procedure conducted individually:
+
+\begin{enumerate}
+\item \textbf{Arrival and consent} (5 min): briefing, participant information sheet, informed consent, audio recording consent.
+\item \textbf{Tutorial} (5 min): condition-identical tutorial scene familiarizing participants with movement, combat, and NPC interaction.
+\item \textbf{Game session} (25--30 min): participant plays in their assigned condition. The researcher is present but silent. Session is time-limited to 30 minutes.
+\item \textbf{Questionnaires} (10 min): GEQ Core Module, miniPXI, and NPS-3 completed immediately post-session.
+\item \textbf{Semi-structured interview} (20 min): following the interview guide (Appendix~D), audio recorded.
+\item \textbf{Debrief} (5 min): explanation of the system and opportunity for questions.
+\end{enumerate}
+
+Total session duration: approximately 65 minutes per participant.
+
+\subsection{Ethical Considerations}
+
+This research received ethical approval through the institutional SPER process. All participants provide informed consent prior to participation and are informed of their right to withdraw at any time without penalty. Telemetry data is stored locally on the research machine in a SQLite database without personally identifiable information beyond the session identifier. Audio recordings from interviews are stored on an encrypted drive and transcribed with participant consent. All data is handled in accordance with GDPR requirements and university data protection policy. Participants are debriefed following the session and informed of the study's full purpose.
+
+\subsection{Analysis Plan}
+
+\textbf{Quantitative analysis} follows these steps:
+
+\begin{enumerate}
+\item \textbf{Normality assessment:} Shapiro-Wilk tests per DV per condition. If normality is violated ($p < 0.05$), Mann-Whitney U is substituted for Welch's $t$-test.
+\item \textbf{Primary test (H1):} Welch's independent-samples $t$-test comparing GEQ Flow subscale scores. Effect size reported as Cohen's $d$ \citep{cohen1988statistical}.
+\item \textbf{Secondary tests (H2, H3):} Identical procedure. Bonferroni correction applied across three hypotheses ($\alpha_{\text{adj}} = 0.0167$).
+\item \textbf{Reliability:} Cronbach's alpha computed for each subscale.
+\item \textbf{Behavioural metrics:} Welch's $t$-tests as exploratory analyses without correction.
+\end{enumerate}
+
+\textbf{Qualitative analysis} follows the six-phase Reflexive Thematic Analysis procedure \citep{braun2022thematic}: familiarization, coding, constructing themes, reviewing, defining themes, and writing up with representative quotes.
