@@ -5,7 +5,7 @@
 
 \section{Chapter Overview}
 
-This chapter documents the technical implementation of the five-module system described in Chapter~3. It details the technology stack, backend service architecture, database design, player modelling implementation, narrative pipeline, RL adaptation engine, and Unity plugin. The chapter also describes the testing and validation procedures applied to ensure system correctness.
+This chapter documents how the five-module system described in Chapter~3 was built, covering the technology stack, backend service, database, and Unity plugin, followed by the testing procedures used to validate correctness.
 
 \section{Technology Stack}
 
@@ -62,10 +62,10 @@ Fallback model & Llama 3.2 3B & --- \\
 The FastAPI backend exposes four primary endpoints:
 
 \begin{itemize}
-\item \texttt{POST /telemetry/batch} --- accepts a \texttt{TelemetryBatch} payload, persists it to SQLite, triggers player modelling, and initiates the adaptation cycle.
-\item \texttt{GET /narrative/generate} --- returns the latest \texttt{NarrativeContent} for a given session, blocking until generation is complete.
-\item \texttt{GET /player/model/\{player\_id\}} --- returns the current \texttt{PlayerModel} including Hexad profile, Flow state, and session metadata.
-\item \texttt{WebSocket /ws/telemetry/\{session\_id\}} --- low-latency telemetry streaming channel.
+\item \texttt{POST /api/telemetry} --- accepts a \texttt{TelemetryBatch} payload, persists it to SQLite, triggers player modelling, and initiates the adaptation cycle.
+\item \texttt{POST /api/narrative/generate} --- accepts a session identifier and returns the generated \texttt{NarrativeContent}, blocking until generation is complete.
+\item \texttt{GET /api/player-model/\{session\_id\}} --- returns the current \texttt{PlayerModel} including Hexad profile, Flow state, and session metadata.
+\item \texttt{WebSocket /ws/telemetry} --- low-latency telemetry streaming channel.
 \end{itemize}
 
 The server is configured with CORS middleware to accept connections from the Unity client's localhost origin. All data is persisted to SQLite with separate tables for telemetry batches, player models, and narrative events. Pydantic v2 models handle all input validation and output serialization, ensuring type safety at the API boundary.
@@ -89,14 +89,20 @@ SQLite was selected over PostgreSQL for simplicity of deployment (no external se
 The player modelling pipeline is implemented as three sequential classes called within the same request handler:
 
 \begin{lstlisting}[language=Python, caption={Player modelling pipeline flow.}]
-TelemetryBatch[] (from SQLite)
+all_batches = TelemetryBatch[] (full session from SQLite)
+recent_batches = all_batches[-6:]  # ~30s sliding window
+
+recent_batches
   -> FeatureExtractor.extract()  -> dict[str, float] (11 features)
-  -> HexadProfiler.compute()     -> HexadProfile      (6 dims)
   -> FlowClassifier.classify()   -> (FlowState, float) (state + conf)
+
+all_batches
+  -> HexadProfiler.compute()     -> HexadProfile      (6 dims)
+
   -> PlayerModel (assembled)
 \end{lstlisting}
 
-The \texttt{FeatureExtractor} aggregates all \texttt{TelemetryBatch} records for the current session from SQLite before computing features, ensuring that features reflect the full session history rather than only the most recent window. This cumulative computation is appropriate for Hexad profiling (which requires sufficient behavioural evidence) while the \texttt{FlowClassifier} uses only the most recent window's features to classify the instantaneous state.
+The modelling service uses a split-window strategy: the \texttt{FeatureExtractor} receives the most recent six \texttt{TelemetryBatch} records (approximately 30~seconds), producing features that reflect the player's current engagement state. The \texttt{FlowClassifier} operates on these recent features to classify the instantaneous Flow state. In contrast, the \texttt{HexadProfiler} receives all session batches, because player-type signals emerge cumulatively over minutes rather than seconds. This split ensures that Flow classification is responsive to momentary changes while Hexad profiling benefits from the full behavioural history.
 
 A notable implementation detail is the denominator protection pattern applied throughout: \texttt{max(deaths, 1)}, \texttt{max(obj\_attempted, 1)}, etc. These guards prevent division by zero in the opening minutes of a session when many counters are still zero.
 

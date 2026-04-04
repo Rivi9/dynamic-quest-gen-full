@@ -17,14 +17,15 @@ class PlayerModelingService:
         self.hexad = HexadProfiler()
 
     def get_model(self, session_id: str, player_id: str = "unknown") -> PlayerModel:
-        batches = self.store.get_last_n(session_id, n=3)
-        if not batches:
+        all_batches = self.store.get_session(session_id)
+        if not all_batches:
             return self._default_model(player_id, session_id)
 
-        features = self.extractor.extract(batches)
+        recent_batches = all_batches[-6:]  # ~30s sliding window for Flow
+        features = self.extractor.extract(recent_batches)
         flow_state, flow_score = self.flow_clf.classify(features)
-        hexad_profile = self.hexad.compute(batches)
-        current_state = self._infer_current_state(batches[-1])
+        hexad_profile = self.hexad.compute(all_batches)  # cumulative session
+        current_state = self._infer_current_state(all_batches[-1])
 
         return PlayerModel(
             player_id=player_id,
@@ -35,7 +36,7 @@ class PlayerModelingService:
             flow_score=flow_score,
             challenge_skill_ratio=features["challenge_skill_ratio"],
             hexad_profile=hexad_profile,
-            session_elapsed=batches[-1].session_elapsed,
+            session_elapsed=all_batches[-1].session_elapsed,
         )
 
     def _infer_current_state(self, batch: TelemetryBatch) -> CurrentState:

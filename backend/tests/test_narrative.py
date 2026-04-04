@@ -3,7 +3,7 @@ from backend.narrative.rag_retriever import LoreRetriever
 
 
 def test_retriever_returns_relevant_lore():
-    retriever = LoreRetriever(persist_dir=":memory:")
+    retriever = LoreRetriever()
     retriever.add_document(
         "The Vault is an ancient dungeon beneath the Contested Vale.", metadata={"source": "world"}
     )
@@ -16,14 +16,14 @@ def test_retriever_returns_relevant_lore():
 
 
 def test_retriever_returns_list_on_empty_collection():
-    retriever = LoreRetriever(persist_dir=":memory:")
+    retriever = LoreRetriever()
     results = retriever.retrieve("spaceship laser cannon", top_k=3)
     assert isinstance(results, list)
     assert len(results) == 0
 
 
 def test_retriever_top_k_limits_results():
-    retriever = LoreRetriever(persist_dir=":memory:")
+    retriever = LoreRetriever()
     for i in range(5):
         retriever.add_document(f"Lore chunk {i} about the kingdom.", metadata={"source": "world"})
     results = retriever.retrieve("kingdom lore", top_k=2)
@@ -31,7 +31,7 @@ def test_retriever_top_k_limits_results():
 
 
 def test_retriever_result_has_expected_keys():
-    retriever = LoreRetriever(persist_dir=":memory:")
+    retriever = LoreRetriever()
     retriever.add_document("The seal was broken in the war.", metadata={"source": "world"})
     results = retriever.retrieve("seal broken", top_k=1)
     assert "text" in results[0]

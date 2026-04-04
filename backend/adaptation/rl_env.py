@@ -32,13 +32,20 @@ class NarrativeAdaptationEnv(gym.Env):
             low=0.0, high=1.0, shape=(7,), dtype=np.float32
         )
         self.action_space = spaces.Discrete(len(_ACTIONS))
-        self._reset_state()
+        self._flow_state = FlowState.FLOW
+        self._step_count = 0
+        self._steps_in_state = 0
+        self._last_3_actions: list[int] = []
+        self._hexad = np.full(4, 0.5, dtype=np.float32)
 
     def _reset_state(self) -> None:
         self._flow_state = FlowState.FLOW
         self._step_count = 0
         self._steps_in_state = 0
         self._last_3_actions: list[int] = []
+        # Randomize Hexad profile each episode so the agent learns
+        # Hexad-conditional behaviour (e.g. LORE_REWARD for Explorers)
+        self._hexad = self.np_random.uniform(0.1, 0.9, size=4).astype(np.float32)
 
     def reset(self, seed: int | None = None, options: dict | None = None):
         super().reset(seed=seed)
@@ -67,7 +74,11 @@ class NarrativeAdaptationEnv(gym.Env):
         }
         return np.array([
             score_map[self._flow_state],
-            0.5, 0.5, 0.5, 0.5, 0.5,
+            0.5,
+            self._hexad[0],  # explorer
+            self._hexad[1],  # socializer
+            self._hexad[2],  # achiever
+            self._hexad[3],  # disruptor
             min(self._step_count / self.max_steps, 1.0),
         ], dtype=np.float32)
 

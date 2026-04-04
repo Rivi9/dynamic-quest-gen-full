@@ -10,11 +10,10 @@ from backend.narrative.ollama_client import OllamaClient
 from backend.player_modeling.modeling_service import PlayerModelingService
 from backend.adaptation.agent import NarrativeAgent
 from backend.routers.telemetry import get_store
-from backend.config import settings
 
 router = APIRouter()
 
-_retriever = LoreRetriever(persist_dir=settings.chroma_persist_dir)
+_retriever = LoreRetriever()
 
 # Load lore files into the retriever at startup
 _LORE_DIR = Path(__file__).resolve().parents[2] / "lore"

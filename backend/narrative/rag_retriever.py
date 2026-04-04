@@ -1,8 +1,8 @@
 """
 LoreRetriever: in-memory semantic search using sentence-transformers + numpy cosine similarity.
 
-This implementation provides the same public API as a chromadb-backed retriever but avoids
-the chromadb/pydantic v1 compatibility issue on Python 3.14+.
+Lore documents are chunked by paragraph and embedded with all-MiniLM-L6-v2 (384-dim).
+Retrieval uses cosine similarity via dot product on L2-normalized vectors.
 """
 from __future__ import annotations
 
@@ -12,9 +12,7 @@ from pathlib import Path
 
 
 class LoreRetriever:
-    def __init__(self, persist_dir: str = "./data/chroma"):
-        # persist_dir is accepted for API compatibility; in-memory mode is always used
-        self.persist_dir = persist_dir
+    def __init__(self):
         self._documents: list[str] = []
         self._metadatas: list[dict] = []
         self._ids: list[str] = []

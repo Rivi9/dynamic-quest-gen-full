@@ -15,8 +15,8 @@ Do not add Co-Authored-By attribution to commit messages in this repository.
 
 This is a closed-loop Unity plugin that personalises RPG narrative in real-time using:
 - Telemetry-derived Hexad player type profiling (no questionnaire)
-- Flow state classification (XGBoost: FLOW / BOREDOM / ANXIETY / APATHY)
-- RAG-grounded LLM narrative generation (Ollama + ChromaDB)
+- Flow state classification (rule-based decision tree: FLOW / BOREDOM / ANXIETY / APATHY)
+- RAG-grounded LLM narrative generation (Ollama + in-memory sentence-transformers)
 - PPO reinforcement learning for narrative action selection (Stable-Baselines3)
 
 ---
@@ -27,24 +27,24 @@ This is a closed-loop Unity plugin that personalises RPG narrative in real-time 
 fyp-v2/
 ├── backend/                    # FastAPI Python backend
 │   ├── main.py                 # App entrypoint — 4 routers: /ws/telemetry, /api/telemetry, /api/player-model, /api/narrative
-│   ├── config.py               # Pydantic settings (Ollama URL, ChromaDB path, SQLite path, cold-start 120s)
+│   ├── config.py               # Pydantic settings (Ollama URL, SQLite path, cold-start 120s)
 │   ├── models/                 # Pydantic schemas
 │   │   ├── telemetry.py        # TelemetryBatch — 23 behavioural signals, sent every 5s
 │   │   ├── player_model.py     # PlayerModel, FlowState enum, HexadProfile
 │   │   └── narrative.py        # NarrativeAction enum (8 actions), NarrativeRequest/Response
 │   ├── player_modeling/
 │   │   ├── feature_extractor.py   # TelemetryBatch → 11-feature vector
-│   │   ├── flow_classifier.py     # XGBoost → FlowState (rule-based fallback if untrained)
-│   │   ├── hexad_profiler.py      # 11-feature vector → 6D continuous Hexad scores
-│   │   └── modeling_service.py    # Orchestrates the above; exposes get_player_model()
+│   │   ├── flow_classifier.py     # Rule-based decision tree → FlowState + confidence
+│   │   ├── hexad_profiler.py      # Cumulative session telemetry → 6D continuous Hexad scores
+│   │   └── modeling_service.py    # Orchestrates the above; split window: all session for Hexad, last 6 for Flow
 │   ├── narrative/
-│   │   ├── rag_retriever.py    # ChromaDB lore retrieval (numpy cosine sim fallback)
+│   │   ├── rag_retriever.py    # In-memory semantic search (sentence-transformers + numpy cosine sim)
 │   │   ├── memory.py           # Episodic session memory (last N narrative events)
 │   │   ├── prompt_builder.py   # Assembles final LLM prompt from player model + lore + memory
 │   │   └── ollama_client.py    # HTTP client for local Ollama inference
 │   ├── adaptation/
 │   │   ├── rl_env.py           # Gymnasium MDP — state: (FlowState, HexadProfile), action: NarrativeAction
-│   │   ├── reward.py           # Reward: +1.0 FLOW, -0.5 BOREDOM/ANXIETY, -1.0 APATHY
+│   │   ├── reward.py           # Reward: +1.0 FLOW, -0.3 BOREDOM, -0.5 ANXIETY, -0.8 APATHY (graduated)
 │   │   └── agent.py            # SB3 PPO wrapper; cold-start heuristic for first 120s
 │   ├── routers/
 │   │   ├── telemetry.py        # WS /ws/telemetry + POST /api/telemetry
@@ -75,7 +75,7 @@ fyp-v2/
 │   ├── interim-presentation.md # Marp slides
 │   ├── logbook_20220580_2312553.docx  # Weekly logbook (24 entries, Sept 2025–Mar 2026)
 │   └── plans/2026-02-27-dynamic-narrative-personalization.md
-└── demo-game/                  # Unity 6 testbed project (Eryndal 2D top-down RPG)
+└── demo-game/                  # Unity 6 testbed project (Eryndal 3D RPG, AnyRPG Core)
 ```
 
 ---
@@ -111,9 +111,9 @@ python -c "from backend.adaptation.agent import NarrativeAgent; NarrativeAgent(a
 - **No questionnaire for player typing.** Hexad profile is derived entirely from the 23 telemetry signals within the session. This is the primary novelty claim.
 - **Cold-start heuristic.** For the first 120 seconds of a session (`flow_cold_start_seconds` in config), the system uses a rule-based mapping (ANXIETY→PROVIDE_GUIDANCE, BOREDOM→INCREASE_URGENCY, APATHY→ADD_MYSTERY, FLOW→NO_CHANGE) before the PPO policy activates.
 - **Local LLM only.** Ollama with Phi-3.5 Mini (3.8B) — no external API calls. Keeps latency manageable and removes network dependency during user study.
-- **RAG uses numpy cosine similarity as fallback** if ChromaDB is unavailable. See `rag_retriever.py`.
-- **8 NarrativeActions:** PROVIDE_LORE, FORESHADOW, ADD_MYSTERY, EMPHASISE_STAKES, PROVIDE_GUIDANCE, INCREASE_URGENCY, TRIGGER_FLASHBACK, NO_CHANGE.
-- **Reward function:** +1.0 if FLOW, -0.5 if BOREDOM or ANXIETY, -1.0 if APATHY.
+- **RAG uses in-memory sentence-transformers** (all-MiniLM-L6-v2) with numpy cosine similarity. No external vector DB needed — the lore corpus is small enough (~30 paragraphs) for in-memory retrieval. See `rag_retriever.py`.
+- **8 NarrativeActions:** LOWER_STAKES, RAISE_STAKES, ADD_MYSTERY, ADD_HUMOR, PROVIDE_GUIDANCE, INCREASE_URGENCY, LORE_REWARD, NO_CHANGE.
+- **Reward function:** +1.0 FLOW, -0.3 BOREDOM, -0.5 ANXIETY, -0.8 APATHY. Plus streak bonus (+0.2), transition bonus (+0.3), step penalty (-0.05), repetition penalty (-0.15).
 
 ---
 
