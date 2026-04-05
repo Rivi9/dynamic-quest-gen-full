@@ -1,7 +1,10 @@
 import json
+import logging
 import httpx
 from backend.config import settings
 from backend.models.narrative import NarrativeContent, NarrativeAction, NarrativeContentType
+
+logger = logging.getLogger(__name__)
 
 _FALLBACK_MAP: dict[NarrativeAction, str] = {
     NarrativeAction.PROVIDE_GUIDANCE: "Varis's voice, clipped and flat: 'Stay to the northern approach. The centre is exposed.'",
@@ -59,7 +62,8 @@ class OllamaClient:
                     speaker=data.get("speaker"),
                     emotional_tone=data.get("emotional_tone", "neutral"),
                 )
-        except Exception:
+        except Exception as e:
+            logger.warning("Ollama generation failed: %s", e)
             return self._fallback(action)
 
     def _fallback(self, action: NarrativeAction) -> NarrativeContent:
