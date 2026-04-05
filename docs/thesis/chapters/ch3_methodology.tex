@@ -5,15 +5,15 @@
 
 \section{Chapter Overview}
 
-This chapter presents the research methodology in detail. It begins with the overall research design and philosophical positioning, then systematically describes each of the five system modules: telemetry collection, player modelling, narrative generation, RL-based adaptation, and Unity plugin design. The chapter then describes the testbed game environment and concludes with the full evaluation design, including hypotheses, instruments, procedure, ethical considerations, and analysis plan. The methodology follows a mixed-methods approach \citep{creswell2017mixed}, combining a controlled between-subjects experiment with qualitative interview analysis.
+This chapter lays out the research design, walks through each of the five system modules in detail, describes the testbed game, and specifies the evaluation plan. The methodology follows a mixed-methods approach \citep{creswell2017mixed}, combining a controlled between-subjects experiment with qualitative interview analysis to capture both the measurable and the experiential dimensions of narrative personalization.
 
 \section{Research Design Overview}
 
-The research adopts a mixed-methods design combining a controlled between-subjects experiment with a qualitative interview study. The experimental component enables causal inference about the effect of the AI-driven personalization system on player experience, while the qualitative component captures the lived experience of personalization that quantitative measures may not fully represent.
+The research adopts a mixed-methods design that pairs a controlled between-subjects experiment with a qualitative interview study. The experimental component is designed for causal inference: if a significant difference in player experience is observed between conditions, the controlled design allows it to be attributed to the adaptive narrative system rather than to confounding factors. The qualitative component captures something the numbers cannot --- the texture of how players actually experience personalization, what they notice, what they value, and what fails to land.
 
-The between-subjects design was chosen over a within-subjects design to eliminate order effects and carry-over: a player who first experiences adaptive narrative and then static narrative (or vice versa) would bring expectations and memory from the first condition into the second. With a between-subjects design, each participant experiences only one condition, removing this contamination at the cost of requiring a larger sample and careful matching.
+A between-subjects design was chosen over a within-subjects alternative to eliminate order effects and carry-over contamination. The concern is straightforward: a player who first experiences adaptive narrative and then switches to static narrative (or vice versa) would inevitably bring expectations, comparisons, and memory from the first condition into the second. The experience of the second condition would be coloured by the first, and any difference between conditions would be confounded with the order in which they were encountered. With a between-subjects design, each participant experiences exactly one condition, cleanly eliminating this contamination at the cost of requiring a larger sample and careful matching to ensure the two groups are comparable at baseline.
 
-The experimental condition (Experimental) deploys the full five-module AI system. The control condition (Control) replaces the Narrative Generation Service and Adaptation Engine with a \texttt{StaticNarrativeContent} ScriptableObject that delivers pre-authored narrative content in response to the same game triggers, with no player-adaptive behaviour. All other aspects of the game session --- environment, objectives, NPC placement, session duration --- are identical across conditions. This design isolates the effect of the adaptive narrative system from confounding factors related to game design or content quality differences.
+The experimental condition (Experimental) deploys the full five-module AI system described in this chapter. The control condition (Control) replaces the Narrative Generation Service and the Adaptation Engine with a \texttt{StaticNarrativeContent} ScriptableObject --- a pre-authored collection of narrative fragments delivered in response to the same game triggers, in the same visual format, but with no dependence on player state. Everything else --- the game environment, the objectives, the NPC placement, the session duration, the UI layout --- is identical across conditions. This isolation is critical: if the Experimental group differs from the Control group on the dependent measures, the difference can be attributed to the adaptive narrative system itself, not to differences in game content, visual presentation, or session structure.
 
 \section{System Architecture}
 
@@ -21,20 +21,139 @@ The system is organized as five modules in a closed-loop pipeline. Figure~\ref{f
 
 \begin{figure}[H]
 \centering
-\fbox{\parbox{0.9\textwidth}{\centering\vspace{2cm}
-\textit{[Insert system architecture diagram here --- five-module closed-loop pipeline showing: Unity Client (PlayerDataLogger) $\rightarrow$ FastAPI Backend (/telemetry/batch) $\rightarrow$ Player Modelling Service $\rightarrow$ Adaptation Engine (PPO) $\rightarrow$ Narrative Generation Service (RAG + LLM) $\rightarrow$ Unity Client (NarrativeManager + ContentInjector) $\rightarrow$ Player $\rightarrow$ Unity Client]}
-\vspace{2cm}}}
-\caption{High-level closed-loop architecture showing the five-module pipeline and data flows between components.}
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=1.2cm and 1.8cm,
+    >={Stealth[length=3mm]},
+    module/.style={
+        rectangle, rounded corners=4pt, draw=black!70, line width=0.8pt,
+        fill=#1, minimum width=3.2cm, minimum height=1.6cm,
+        text width=3cm, align=center, font=\small
+    },
+    module/.default={blue!8},
+    component/.style={
+        rectangle, rounded corners=2pt, draw=black!50, line width=0.5pt,
+        fill=white, minimum width=2.4cm, minimum height=0.55cm,
+        align=center, font=\scriptsize\ttfamily
+    },
+    data/.style={
+        font=\scriptsize\itshape, text=black!70
+    },
+    arrow/.style={
+        ->, line width=0.9pt, black!70
+    },
+    groupbox/.style={
+        rectangle, rounded corners=6pt, draw=black!40, dashed,
+        line width=0.6pt, inner sep=10pt
+    }
+]
+
+% ── Module 1: Unity Client (Telemetry) ──
+\node[module=green!10] (telemetry) {
+    \textbf{Module 1}\\[2pt]
+    Telemetry\\Collection
+};
+\node[component, below=0.3cm of telemetry] (pdl) {PlayerDataLogger};
+
+% ── Module 2: Player Modelling ──
+\node[module=blue!10, right=2.5cm of telemetry] (playermod) {
+    \textbf{Module 2}\\[2pt]
+    Player\\Modelling
+};
+\node[component, below=0.15cm of playermod, yshift=-0.1cm] (fe) {FeatureExtractor};
+\node[component, below=0.05cm of fe] (hp) {HexadProfiler};
+\node[component, below=0.05cm of hp] (fc) {FlowClassifier};
+
+% ── Module 3: Adaptation Engine ──
+\node[module=orange!12, right=2.5cm of playermod] (adaptation) {
+    \textbf{Module 3}\\[2pt]
+    Adaptation\\Engine
+};
+\node[component, below=0.3cm of adaptation] (ppo) {NarrativeAgent (PPO)};
+
+% ── Module 4: Narrative Generation ──
+\node[module=purple!10, below=3.2cm of adaptation] (narrative) {
+    \textbf{Module 4}\\[2pt]
+    Narrative\\Generation
+};
+\node[component, below=0.15cm of narrative, yshift=-0.1cm] (rag) {LoreRetriever (RAG)};
+\node[component, below=0.05cm of rag] (mem) {EpisodicMemory};
+\node[component, below=0.05cm of mem] (pb) {PromptBuilder};
+\node[component, below=0.05cm of pb] (ollama) {OllamaClient};
+
+% ── Module 5: Content Injection ──
+\node[module=green!10, below=3.2cm of telemetry] (injection) {
+    \textbf{Module 5}\\[2pt]
+    Content\\Injection
+};
+\node[component, below=0.15cm of injection, yshift=-0.1cm] (nm) {NarrativeManager};
+\node[component, below=0.05cm of nm] (ci) {ContentInjector};
+
+% ── Player node ──
+\node[module=gray!15, left=2.0cm of telemetry, yshift=-1.6cm] (player) {
+    \textbf{Player}\\[2pt]
+    {\scriptsize Gameplay}\\
+    {\scriptsize Behaviour}
+};
+
+% ── Backend group box ──
+\begin{scope}[on background layer]
+    \node[groupbox, fill=yellow!4,
+          fit=(playermod)(fe)(hp)(fc)(adaptation)(ppo)(narrative)(rag)(mem)(pb)(ollama),
+          label={[font=\small\bfseries, text=black!60]above:FastAPI Backend}
+    ] (backend) {};
+\end{scope}
+
+% ── Unity group box ──
+\begin{scope}[on background layer]
+    \node[groupbox, fill=green!4,
+          fit=(telemetry)(pdl)(injection)(nm)(ci),
+          label={[font=\small\bfseries, text=black!60]above:Unity Client}
+    ] (unity) {};
+\end{scope}
+
+% ── Arrows ──
+% Player -> Telemetry
+\draw[arrow] (player.north east) -- node[data, above, sloped] {gameplay} (telemetry.west);
+
+% Telemetry -> Player Modelling
+\draw[arrow] (telemetry.east) -- node[data, above] {TelemetryBatch} node[data, below] {\scriptsize HTTP POST / 5s} (playermod.west);
+
+% Player Modelling -> Adaptation
+\draw[arrow] (playermod.east) -- node[data, above] {PlayerModel} (adaptation.west);
+
+% Adaptation -> Narrative Generation
+\draw[arrow] (adaptation.south) -- node[data, right, text width=2cm] {NarrativeAction} (narrative.north);
+
+% Narrative Generation -> Content Injection
+\draw[arrow] (narrative.west) -- node[data, above] {NarrativeContent} node[data, below] {\scriptsize JSON response} (injection.east);
+
+% Content Injection -> Player
+\draw[arrow] (injection.west) -| node[data, below, near start] {dialogue / UI} (player.south);
+
+% ── Lore corpus annotation ──
+\node[component, fill=purple!5, right=0.8cm of rag, minimum width=2cm] (lore) {Lore Corpus};
+\draw[->, dashed, black!50] (lore) -- (rag);
+
+% ── Ollama annotation ──
+\node[component, fill=orange!5, right=0.8cm of ollama, minimum width=2cm] (phi) {Phi-3.5 Mini};
+\draw[->, dashed, black!50] (phi) -- (ollama);
+
+\end{tikzpicture}%
+}
+\caption{Closed-loop system architecture. Five modules form a pipeline from player behaviour through telemetry collection, player modelling, PPO-based adaptation, RAG-grounded narrative generation, and content injection back to the player. Dashed boxes indicate platform boundaries.}
 \label{fig:architecture}
 \end{figure}
 
-The pipeline operates as follows. The Unity \texttt{PlayerDataLogger} aggregates behavioural signals over five-second windows and transmits a \texttt{TelemetryBatch} to the FastAPI backend via HTTP POST (with WebSocket support for lower-latency streaming). The Player Modelling Service processes incoming batches: the \texttt{FeatureExtractor} computes eleven normalized features, the \texttt{HexadProfiler} derives the six-dimensional continuous Hexad profile, and the \texttt{FlowClassifier} assigns a Flow state. The resulting \texttt{PlayerModel} is passed to the \texttt{NarrativeAgent}, which selects a \texttt{NarrativeAction} using either the cold-start heuristic (first 120~seconds) or the trained PPO policy. The Narrative Generation Service uses the selected action to query the \texttt{LoreRetriever} (RAG), consults the \texttt{EpisodicMemory}, assembles the full prompt through the \texttt{PromptBuilder}, and requests generation from the Ollama-hosted LLM. The resulting \texttt{NarrativeContent} is returned to the Unity client and injected at the appropriate in-game display point.
+The pipeline operates as a continuous loop, cycling once per telemetry window. The Unity \texttt{PlayerDataLogger} aggregates behavioural signals over five-second windows and transmits a \texttt{TelemetryBatch} to the FastAPI backend via HTTP POST (with WebSocket support available for lower-latency streaming when network conditions permit). On the backend, the Player Modelling Service processes each incoming batch through three sequential stages: the \texttt{FeatureExtractor} computes eleven normalised features from the raw telemetry, the \texttt{HexadProfiler} derives the six-dimensional continuous Hexad profile from the cumulative session history, and the \texttt{FlowClassifier} assigns a Flow state based on the most recent data. The assembled \texttt{PlayerModel} is then passed to the \texttt{NarrativeAgent}, which selects a \texttt{NarrativeAction} --- using the cold-start heuristic during the first 120~seconds, and the trained PPO policy thereafter. The Narrative Generation Service takes the selected action and uses it to formulate a query for the \texttt{LoreRetriever} (RAG), consults the \texttt{EpisodicMemory} for relevant prior narrative events, assembles the full two-message prompt through the \texttt{PromptBuilder}, and dispatches a generation request to the locally hosted Ollama LLM. The resulting \texttt{NarrativeContent} --- a JSON payload containing the generated text, content type, and speaker attribution --- is returned to the Unity client and injected at the appropriate in-game display point by the \texttt{ContentInjector}.
 
 \section{Player Modelling Module}
 
+The player modelling module is responsible for answering two questions about the player at every point in the session: \textit{what kind of player are they?} (the Hexad profile) and \textit{how are they doing right now?} (the Flow state). Everything downstream --- the action the PPO agent selects, the tone the LLM adopts, the content the player ultimately sees --- depends on the accuracy and responsiveness of these two answers.
+
 \subsection{Telemetry Collection}
 
-The telemetry system captures 23 behavioural fields per five-second window. Table~\ref{tab:telemetry} lists the complete schema.
+The telemetry system captures 23 behavioural fields per five-second window, providing the raw signal from which both the Hexad profile and the Flow state are derived. Table~\ref{tab:telemetry} lists the complete schema.
 
 \begin{longtable}{@{}p{4cm} p{1.5cm} p{7.5cm}@{}}
 \caption{TelemetryBatch schema (23 fields).} \label{tab:telemetry} \\
@@ -72,7 +191,7 @@ current\_objective & str & Active quest objective identifier \\
 \bottomrule
 \end{longtable}
 
-The five-second window granularity balances responsiveness (enabling sub-minute adaptation cycles) against noise sensitivity (single-frame events are smoothed over the window). In practice, the system accumulates a sliding window of recent batches before computing the feature vector, allowing multi-window averages to further smooth transient spikes.
+The five-second window granularity represents a deliberate trade-off between responsiveness and noise sensitivity. A shorter window would allow faster adaptation cycles but would amplify transient spikes --- a single unlucky death or a momentary pause to answer a phone call would distort the player model. A longer window would produce smoother signals but at the cost of delayed response: if a player tips from Flow into anxiety, the system should notice within seconds, not minutes. Five seconds proved to be a practical sweet spot during development. In practice, the system further smooths the signal by accumulating a sliding window of recent batches (typically six, spanning approximately 30~seconds) before computing the feature vector, allowing multi-window averages to absorb transient fluctuations.
 
 \subsection{Feature Extraction (11 Features)}
 
@@ -127,9 +246,9 @@ Philanthropist & 0.60 $\times$ dialogue\_engage + 0.40 $\times$ lore\_rate & Nar
 \end{tabular}
 \end{table}
 
-The mapping from behavioural signals to Hexad dimensions was established through a principled alignment process guided by the original Hexad motivation descriptions \citep{tondello2016hexad}: Achievers seek mastery and progress (captured by objective completion and combat effectiveness); Explorers seek discovery (captured by map and lore coverage); Socializers seek connection (captured by voluntary NPC interaction and dialogue engagement); Free Spirits resist imposed structure (captured by exploration uncorrelated with objective completion); Disruptors challenge systems (captured by aggressive combat behaviour); Philanthropists give and share (captured by engagement with narrative and lore content).
+The mapping from behavioural signals to Hexad dimensions was established through a principled alignment process guided by the original Hexad motivation descriptions \citep{tondello2016hexad}. The logic proceeds dimension by dimension. Achievers seek mastery and progress, so the signal proxies are objective completion rate and combat kill count --- both direct indicators of goal-oriented play. Explorers seek discovery, so map coverage and lore engagement serve as proxies: a player who visits every corner of the map and reads every collectible is behaving as an Explorer regardless of what a questionnaire might say. Socializers seek connection, so voluntary NPC interaction count and dialogue engagement rate are weighted; a player who seeks out NPCs unprompted and reads their dialogue is exhibiting Socializer behaviour. Free Spirits resist imposed structure, so the proxy is exploration \textit{uncorrelated with} objective completion --- wandering off the critical path rather than following it. Disruptors challenge systems, captured by aggressive combat behaviour (high kill counts, high damage dealt, willingness to die repeatedly). Philanthropists give and share, captured by depth of engagement with narrative and lore content --- a proxy for the motivation to understand and connect with the game world rather than merely to conquer it.
 
-All profiles are initialized to 0.5 (neutral) in the absence of data, preventing cold-start artefacts from biasing early narrative selection.
+All profiles are initialised to 0.5 (the neutral midpoint) in the absence of data, preventing cold-start artefacts from biasing the narrative action selection before the system has observed enough behaviour to form a meaningful profile.
 
 \subsection{Flow State Classification (MDP States)}
 
@@ -152,15 +271,64 @@ The \texttt{FlowClassifier} implements a decision-tree classifier over the \text
 \end{tabular}
 \end{table}
 
-APATHY is classified first because it represents a qualitatively distinct disengagement pattern (high inactivity + low narrative interaction + low challenge) that would otherwise be misclassified as BOREDOM on the ratio criterion alone. The confidence scoring for BOREDOM and ANXIETY is proportional to the distance from the FLOW band boundary, reflecting that states further from the boundary are classified with higher certainty. FLOW confidence is highest when the ratio is closest to 1.0 (perfect challenge--skill balance).
+Figure~\ref{fig:flow_tree} visualises the classification logic as a decision tree.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    scale=0.82, every node/.style={scale=0.82},
+    >={Stealth[length=2mm]},
+    decision/.style={
+        diamond, draw=black!60, line width=0.6pt, fill=gray!6,
+        inner sep=2pt, align=center, font=\small,
+        minimum width=2.2cm, aspect=2.2
+    },
+    outcome/.style={
+        rectangle, rounded corners=4pt, draw=black!60, line width=0.7pt,
+        minimum width=2.2cm, minimum height=0.9cm,
+        align=center, font=\small\bfseries, inner sep=5pt
+    },
+    edgelbl/.style={font=\scriptsize, text=black!70},
+]
+
+% ── Decision nodes ──
+\node[decision] (d1) {idle $>$ 0.40\\AND dial $<$ 0.30\\AND ratio $<$ 0.60?};
+\node[outcome, fill=red!12, right=3.2cm of d1] (apathy) {APATHY};
+
+\node[decision, below=1.6cm of d1] (d2) {ratio $<$ 0.75?};
+\node[outcome, fill=yellow!20, right=3.2cm of d2] (boredom) {BOREDOM};
+
+\node[decision, below=1.6cm of d2] (d3) {ratio $>$ 1.30?};
+\node[outcome, fill=orange!18, right=3.2cm of d3] (anxiety) {ANXIETY};
+
+\node[outcome, fill=green!15, below=1.6cm of d3] (flow) {FLOW};
+
+% ── Edges ──
+\draw[->, line width=0.7pt] (d1) -- node[edgelbl, above] {Yes} (apathy);
+\draw[->, line width=0.7pt] (d1) -- node[edgelbl, left] {No} (d2);
+\draw[->, line width=0.7pt] (d2) -- node[edgelbl, above] {Yes} (boredom);
+\draw[->, line width=0.7pt] (d2) -- node[edgelbl, left] {No} (d3);
+\draw[->, line width=0.7pt] (d3) -- node[edgelbl, above] {Yes} (anxiety);
+\draw[->, line width=0.7pt] (d3) -- node[edgelbl, left] {No (default)} (flow);
+
+\end{tikzpicture}
+\caption{Flow state classification decision tree. Conditions are evaluated in priority order (top to bottom); the first satisfied condition determines the classification.}
+\label{fig:flow_tree}
+\end{figure}
+
+The priority ordering matters. APATHY is evaluated first because it represents a qualitatively distinct disengagement pattern --- the player has not merely lost interest in the challenge (which would be BOREDOM) but has stopped meaningfully interacting with the game altogether. Without the compound condition check, such a player would be classified as BORED on the challenge--skill ratio alone, and the system would respond with urgency-boosting narrative. But a disengaged player does not need urgency; they need a reason to care. The APATHY classification ensures the system responds with mystery and intrigue rather than pressure.
+
+The confidence scoring for BOREDOM and ANXIETY is proportional to the distance from the FLOW band boundary: a player with a challenge--skill ratio of 0.40 is classified with higher confidence than one at 0.70, because the former is further from the zone of optimal engagement. FLOW confidence is highest when the ratio sits closest to 1.0 --- the theoretical point of perfect challenge--skill balance --- and tapers as the ratio approaches either boundary.
 
 \section{Narrative Generation Module}
 
+The narrative generation module is the part of the system that actually writes the story. Everything upstream --- the telemetry, the feature extraction, the Flow classification, the Hexad profiling, the PPO action selection --- exists to inform this module about \textit{what kind of narrative to produce}. The module itself is responsible for producing it: grounded in the game's lore, consistent with the session's narrative history, and formatted for injection into the game's UI.
+
 \subsection{RAG Pipeline}
 
-The \texttt{LoreRetriever} implements in-memory semantic search using the sentence-transformers all-MiniLM-L6-v2 model, which produces 384-dimensional L2-normalized embeddings. The lore corpus is pre-indexed at startup by chunking the world, character, and quest lore documents by paragraph (double-newline delimiters) and embedding each chunk. At retrieval time, the query is embedded and cosine similarities are computed against all stored embeddings through a dot product (since all vectors are unit-normalized, cosine similarity equals the dot product). The top $k = 3$ chunks by similarity are returned and formatted as bullet points in the LLM user prompt.
+The \texttt{LoreRetriever} implements in-memory semantic search using the sentence-transformers all-MiniLM-L6-v2 model, which produces 384-dimensional L2-normalised embeddings. The lore corpus --- comprising the world, character, and quest lore documents stored in the \texttt{lore/} directory --- is pre-indexed at server startup. Each document is chunked by paragraph (double-newline delimiters), and each chunk is embedded into the 384-dimensional space. At retrieval time, the query (constructed from the player's current Flow state, activity, and location) is embedded and cosine similarities are computed against all stored chunk embeddings via a dot product (since all vectors are unit-normalised, cosine similarity reduces to the dot product). The top $k = 3$ chunks by similarity are returned and formatted as bullet points in the LLM user prompt, providing the model with the lore context most relevant to the current generation task.
 
-This design was chosen over a persistent vector database (e.g., ChromaDB, Pinecone) for two reasons: Python 3.14 compatibility issues with ChromaDB's Pydantic v1 dependency, and the relatively small lore corpus size (three files, approximately 30 paragraphs total) which renders the overhead of a full vector database unnecessary. In-memory retrieval at this corpus size is effectively instantaneous.
+This design was chosen over a persistent vector database (e.g., ChromaDB, Pinecone) for two reasons that proved decisive during development. First, ChromaDB's Pydantic v1 dependency created compatibility issues with the project's Python 3.14 runtime that could not be cleanly resolved. Second, and more fundamentally, the lore corpus is small --- three files, approximately 30 paragraphs, a few hundred embeddings at most --- which renders the indexing, persistence, and query optimisation machinery of a full vector database unnecessary overhead. In-memory retrieval at this corpus scale completes in sub-millisecond time, well within the latency budget of the narrative generation pipeline.
 
 \subsection{Episodic Session Memory}
 
@@ -185,13 +353,15 @@ The user prompt injects: the player's current Flow state and challenge--skill ra
 
 The \texttt{OllamaClient} sends the assembled prompt to a locally hosted Ollama instance using the \texttt{/api/chat} endpoint. The primary model is Phi-3.5 Mini (3.8B parameters; \citealp{microsoft2024phi}), with Llama 3.2 3B as a configured fallback. The generation parameters are: temperature 0.75, top\_p 0.90, maximum tokens 200, JSON format mode enabled. The 8-second HTTP timeout ensures that a slow or stalled generation does not block the main game loop.
 
-When the LLM response is malformed JSON, contains a fallback signal, or the request times out, the \texttt{OllamaClient} returns a pre-authored fallback string corresponding to the requested \texttt{NarrativeAction}. These fallback strings are minimal, tonally appropriate responses that maintain narrative coherence without exposing the player to system failure artefacts.
+When the LLM response is malformed JSON, contains a fallback signal, or the request times out, the \texttt{OllamaClient} returns a pre-authored fallback string corresponding to the requested \texttt{NarrativeAction}. These fallback strings are intentionally minimal --- a single sentence of tonally appropriate narrative --- designed to maintain the illusion of a functioning narrative system without exposing the player to error messages, empty dialogue boxes, or other artefacts that would break immersion. The player sees a brief, contextually appropriate line; they do not see that the LLM failed to produce valid output. This graceful degradation is essential for a system that will be used in a controlled user study, where a single visible error could contaminate a participant's experience and compromise the evaluation.
 
 \section{Adaptation Engine (MDP + PPO)}
 
+The adaptation engine is the decision-making core of the system: given what the player modelling module knows about the player right now, what should the narrative do next? This question is formalised as a reinforcement learning problem, which allows the answer to be \textit{learned} from experience rather than hand-coded by the designer.
+
 \subsection{MDP Formulation}
 
-The narrative adaptation problem is formalized as a Markov Decision Process $(S, A, T, R, \gamma)$ implemented as a Gymnasium environment.
+The narrative adaptation problem is formalised as a Markov Decision Process $(S, A, T, R, \gamma)$ implemented as a Gymnasium environment.
 
 \textbf{State space $S$:} A Box observation space of shape (7,) with all values in [0, 1]. Table~\ref{tab:mdp_state} defines the seven dimensions.
 
@@ -238,7 +408,66 @@ The narrative adaptation problem is formalized as a Markov Decision Process $(S,
 \end{tabular}
 \end{table}
 
-\textbf{Transition dynamics $T$:} The simulated training environment models stochastic Flow state transitions. When the agent selects a ``helpful'' action for the current state (e.g., ANXIETY $\rightarrow$ \{PROVIDE\_GUIDANCE, LOWER\_STAKES\}), the environment transitions to FLOW with probability 0.75 or remains in the current state with probability 0.25. This stochasticity prevents the policy from memorizing a deterministic mapping and encourages robust adaptation.
+\textbf{Transition dynamics $T$:} The simulated training environment models stochastic Flow state transitions. When the agent selects a ``helpful'' action for the current state (e.g., ANXIETY $\rightarrow$ \{PROVIDE\_GUIDANCE, LOWER\_STAKES\}), the environment transitions to FLOW with probability 0.75 or remains in the current state with probability 0.25. This stochasticity prevents the policy from memorizing a deterministic mapping and encourages generalization across states.
+
+Figure~\ref{fig:mdp_transitions} visualises the state transitions and the narrative actions that drive them.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    scale=0.85, every node/.style={scale=0.85},
+    >={Stealth[length=2.5mm]},
+    state/.style={
+        circle, draw=black!60, line width=0.8pt,
+        minimum size=2cm, align=center, font=\small\bfseries, inner sep=3pt
+    },
+    helpful/.style={->, line width=0.7pt, black!70, bend left=18},
+    selfloop/.style={->, line width=0.5pt, black!40, looseness=5},
+    drift/.style={->, line width=0.5pt, black!30, dashed, bend left=15},
+    actlbl/.style={font=\tiny, text=black!60, align=center},
+    problbl/.style={font=\tiny\itshape, text=black!50},
+]
+
+% ── States ──
+\node[state, fill=green!15] (flow)    at (0,0)      {FLOW};
+\node[state, fill=yellow!20] (bore)   at (-4.5,-3.5) {BOREDOM};
+\node[state, fill=orange!18] (anx)    at (4.5,-3.5)  {ANXIETY};
+\node[state, fill=red!12]   (apa)     at (0,-5.5)    {APATHY};
+
+% ── Helpful actions → FLOW (p=0.75) ──
+\draw[helpful] (bore) to
+    node[actlbl, above left, pos=0.45] {INCREASE\_URGENCY\\RAISE\_STAKES\\ADD\_MYSTERY}
+    node[problbl, below left, pos=0.55] {$p=0.75$}
+    (flow);
+\draw[helpful] (anx) to
+    node[actlbl, above right, pos=0.45] {PROVIDE\_GUIDANCE\\LOWER\_STAKES}
+    node[problbl, below right, pos=0.55] {$p=0.75$}
+    (flow);
+\draw[helpful] (apa) to
+    node[actlbl, right, pos=0.5] {ADD\_MYSTERY\\LORE\_REWARD}
+    node[problbl, left, pos=0.5] {$p=0.75$}
+    (flow);
+
+% ── Self-loops (remain, p=0.25 or unhelpful) ──
+\draw[selfloop] (bore) to[out=210, in=240] node[problbl, below] {$p=0.25$} (bore);
+\draw[selfloop] (anx) to[out=-30, in=-60] node[problbl, below] {$p=0.25$} (anx);
+\draw[selfloop] (apa) to[out=210, in=240] node[problbl, below] {$p=0.25$} (apa);
+
+% ── FLOW self-loop (NO_CHANGE) ──
+\draw[selfloop] (flow) to[out=60, in=90]
+    node[actlbl, above] {NO\_CHANGE}
+    node[problbl, right, xshift=3pt] {$p=0.90$}
+    (flow);
+
+% ── Drift from FLOW → BOREDOM ──
+\draw[drift] (flow) to
+    node[problbl, left, pos=0.5] {drift $p=0.10$}
+    (bore);
+
+\end{tikzpicture}
+\caption{MDP state-transition diagram. Solid arrows show transitions caused by helpful narrative actions ($p = 0.75$ to FLOW). Self-loops indicate remaining in the current state. The dashed arrow shows the stochastic drift from FLOW to BOREDOM when no helpful action is needed.}
+\label{fig:mdp_transitions}
+\end{figure}
 
 \textbf{Discount factor $\gamma$:} 0.95, reflecting moderate preference for near-term reward while maintaining long-horizon planning.
 
@@ -267,7 +496,7 @@ Repetition penalty & $-0.15$ & All 3 recent actions identical \\
 \end{tabular}
 \end{table}
 
-The state rewards reflect the severity ordering of non-Flow states: APATHY is penalized most heavily because it represents the most concerning disengagement. The step penalty provides constant pressure toward action efficiency. The Flow streak bonus reinforces sustained optimal experience. The transition bonus provides additional shaping reward for key recovery transitions. The repetition penalty discourages degenerate policies.
+The reward function encodes a clear priority ordering. APATHY draws the heaviest penalty ($-0.8$) because it represents the deepest disengagement --- a player who has essentially given up. ANXIETY ($-0.5$) is penalised more than BOREDOM ($-0.3$) because an overwhelmed player is at higher risk of quitting the session entirely. The step penalty ($-0.05$) applies at every timestep regardless of state, creating constant pressure toward action efficiency and discouraging the agent from drifting into passive NO\_CHANGE loops. The Flow streak bonus ($+0.20$) rewards sustained optimal experience, not just momentary hits of Flow: it activates only after the player has been in FLOW for more than two consecutive steps, encouraging the agent to maintain conditions rather than simply reaching them. The transition bonus ($+0.30$) provides additional shaping reward for the key recovery transitions --- moving a player from ANXIETY or BOREDOM back into FLOW --- which are the most valuable moments for the system to get right. Finally, the repetition penalty ($-0.15$) fires when all three most recent actions are identical, discouraging degenerate policies in which the agent converges on a single favourite action and applies it regardless of context.
 
 \subsection{Cold-Start Heuristic}
 
@@ -280,7 +509,7 @@ For the first 120~seconds of a session, or when the PPO model is unavailable, th
 \item FLOW $\rightarrow$ NO\_CHANGE
 \end{itemize}
 
-The 120-second threshold allows the player sufficient time to engage with the game world before the RL policy takes effect, giving the player modelling module time to accumulate meaningful telemetry.
+The 120-second threshold serves a dual purpose. It gives the player time to settle into the game world --- learning the controls, orienting to the environment, forming initial goals --- before the learned policy begins making adaptation decisions. And it gives the player modelling module time to accumulate enough telemetry for the Hexad profile and Flow classification to be meaningful. A PPO policy operating on a player model derived from ten seconds of data would be making decisions on noise; the heuristic ensures that the first two minutes of narrative adaptation are sensible even when the signal is thin.
 
 \section{Unity Plugin Design}
 
@@ -294,9 +523,11 @@ For the Control condition, the \texttt{NarrativeManager} is replaced by a \textt
 
 \section{Testbed Game Design}
 
-The testbed is a 2D top-down RPG built in Unity 6 LTS. The game world encompasses a warzone setting --- the Contested Vale --- a once-fertile trade corridor now fought over by two factions. The world is described in structured lore documents that serve as the RAG corpus.
+The testbed is a 3D RPG built in Unity 6 LTS using the AnyRPG Core framework \citep{anyrpg2024core}. AnyRPG provides a complete RPG engine --- combat, questing, inventory, NPC dialogue, and character progression --- out of the box, which allowed the development effort to focus on the narrative personalization system rather than on reimplementing standard RPG mechanics from scratch.
 
-The game world features three navigable areas:
+The game world is set in the Contested Vale, a once-fertile trade corridor now fought over by two rival factions. The setting was chosen to support a range of player behaviours: combat encounters for Achievers and Disruptors, exploration opportunities for Explorers and Free Spirits, NPC interactions for Socializers, and lore collectibles for Philanthropists. The world is described in structured lore documents (stored in the \texttt{lore/} directory) that double as the RAG corpus for the narrative generation pipeline.
+
+Three navigable areas make up the game world:
 
 \begin{enumerate}
 \item \textbf{Commander Varis's Post} --- a fortified camp at the northern edge serving as the starting area. Varis is the primary quest giver: a methodical, unsentimental military commander who gives orders without explaining them. Players who engage extensively with Varis register high Achiever signals.
@@ -306,7 +537,9 @@ The game world features three navigable areas:
 \item \textbf{The Waystone / Chronicler's Camp} --- a neutral area where the Chronicler, a scholar who has observed the Vale for thirty years, provides lore and context. The presence of lore collectibles creates a natural Explorer/Philanthropist signal divergence.
 \end{enumerate}
 
-Three NPCs populate the world: Commander Varis (primary quest giver, military voice), the Chronicler (lore source, academic voice), and Sera the Merchant (supply trader, pragmatic voice). The main quest (Clear the Advance) guides players through the combat zone, while a collection quest (Salvage the Fallen) encourages exploration. A standard play session is approximately 25--30 minutes.
+Three NPCs populate the world, each designed with a distinct voice and function that the LLM must maintain when generating dialogue for them. Commander Varis is the primary quest giver: a methodical, unsentimental military officer who gives orders and expects compliance. The Chronicler is the lore source: a scholar who has observed the Vale for thirty years and speaks in measured, academic prose. Sera the Merchant is the pragmatic intermediary: a supply trader whose dialogue is clipped, transactional, and occasionally sardonic. These three voices serve as a consistency test for the narrative generation pipeline --- if the LLM generates dialogue for the Chronicler that sounds like Varis, the player will notice.
+
+The main quest (Clear the Advance) provides a linear spine through the combat zone, ensuring that all players encounter a minimum threshold of challenge and narrative content. A secondary collection quest (Salvage the Fallen) encourages off-path exploration and rewards lore engagement. A standard play session runs approximately 25--30 minutes, which is long enough for the player modelling module to build a meaningful profile but short enough to remain practical within the constraints of a controlled user study.
 
 \section{Evaluation Design}
 
@@ -320,7 +553,7 @@ The following directional hypotheses are tested:
 \item[H3:] Participants in the Experimental condition will score significantly higher on the NPS-3 Narrative Personalization Scale than participants in the Control condition.
 \end{description}
 
-H1 is designated the primary hypothesis because Flow is the direct optimization target of the adaptation engine.
+H1 is designated the primary hypothesis because Flow is the direct optimisation target of the adaptation engine's reward function. If the system works as designed, H1 is the hypothesis it is most likely to support; if the system fails, H1 is the hypothesis that will be most clearly refuted.
 
 \subsection{Participants and Recruitment}
 
@@ -332,7 +565,7 @@ Participants are randomly assigned to conditions using a balanced random allocat
 
 \textbf{Game Experience Questionnaire (GEQ) --- Core Module.} The GEQ \citep{ijsselsteijn2013geq} is a 33-item instrument measuring seven dimensions of game experience on a 0--4 scale. The primary DV is the GEQ \textbf{Flow subscale} (items 5, 13, 25, 28, 31; items 5 and 13 reverse-scored). The secondary DV is the GEQ \textbf{Immersion subscale} (items 3, 12, 18, 19, 27, 30).
 
-\textbf{miniPXI --- Player Experience Inventory (Short Form).} The miniPXI \citep{vornhagen2022minipxi} is an 11-item instrument on a 1--7 scale covering six player experience dimensions. The total score (mean of all 11 items) is used as a holistic player experience index.
+\textbf{miniPXI --- Player Experience Inventory (Short Form).} The miniPXI \citep{vornhagen2022minipxi} is an 11-item instrument on a 1--7 scale covering six player experience dimensions. The total score (mean of all 11 items) is used as a general player experience index.
 
 \textbf{Narrative Personalization Scale (NPS-3).} The NPS-3 is a custom three-item scale on a 1--7 Likert scale: (1) ``The story felt tailored to how I was playing,'' (2) ``The narrative responded to my choices and actions,'' and (3) ``The game seemed to understand what kind of player I am.'' Cronbach's alpha will be reported; if $\alpha < 0.70$, items will be analysed individually.
 
@@ -347,7 +580,7 @@ Each participant session follows a standardized procedure conducted individually
 \item \textbf{Tutorial} (5 min): condition-identical tutorial scene familiarizing participants with movement, combat, and NPC interaction.
 \item \textbf{Game session} (25--30 min): participant plays in their assigned condition. The researcher is present but silent. Session is time-limited to 30 minutes.
 \item \textbf{Questionnaires} (10 min): GEQ Core Module, miniPXI, and NPS-3 completed immediately post-session.
-\item \textbf{Semi-structured interview} (20 min): following the interview guide (Appendix~D), audio recorded.
+\item \textbf{Semi-structured interview} (20 min): following the interview guide (Appendix~\ref{app:interview}), audio recorded.
 \item \textbf{Debrief} (5 min): explanation of the system and opportunity for questions.
 \end{enumerate}
 

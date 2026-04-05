@@ -131,6 +131,27 @@ Citation: \citet{vornhagen2022minipxi}
 \textbf{Subscales:} Mastery (1, 2); Curiosity (3, 4); Immersion (5, 6); Autonomy (7, 8); Positive Affect (9, 10, 11). Total score: mean of all 11 items.
 
 
+\chapter{Narrative Personalization Scale (NPS-3)}
+\label{app:nps3}
+
+The NPS-3 is a custom three-item scale developed for this study to measure perceived narrative personalization. Cronbach's alpha will be reported in Chapter~5.
+
+\textbf{Scale:} 1 = Strongly Disagree \ldots{} 7 = Strongly Agree
+
+\begin{longtable}{@{}cl@{}}
+\toprule
+\textbf{\#} & \textbf{Item} \\
+\midrule
+\endfirsthead
+1 & The story felt tailored to how I was playing. \\
+2 & The narrative responded to my choices and actions. \\
+3 & The game seemed to understand what kind of player I am. \\
+\bottomrule
+\end{longtable}
+
+\textbf{Scoring:} Mean of all 3 items. If Cronbach's $\alpha < 0.70$, items are analysed individually.
+
+
 \chapter{Interview Guide}
 \label{app:interview}
 
@@ -185,12 +206,11 @@ The FastAPI backend exposes the following REST and WebSocket endpoints:
 \toprule
 \textbf{Method} & \textbf{Path} & \textbf{Description} \\
 \midrule
-POST & /telemetry/batch & Submit telemetry window; returns PlayerModel \\
-GET & /narrative/generate & Retrieve generated narrative for session \\
-GET & /player/model/\{player\_id\} & Get current PlayerModel \\
-GET & /player/hexad/\{player\_id\} & Get current HexadProfile \\
-DELETE & /session/\{session\_id\} & Clear session data \\
-WebSocket & /ws/telemetry/\{session\_id\} & Low-latency telemetry stream \\
+POST & /api/telemetry & Submit telemetry window; persists batch to SQLite \\
+POST & /api/narrative/generate & Generate narrative content for a session \\
+GET & /api/player-model/\{session\_id\} & Get current PlayerModel (Hexad + Flow) \\
+GET & /health & Health check \\
+WebSocket & /ws/telemetry & Low-latency telemetry stream \\
 \bottomrule
 \end{tabular}
 \end{table}

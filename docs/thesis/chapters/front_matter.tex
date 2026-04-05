@@ -107,7 +107,7 @@ I confirm that the work contained in this BSc project report has been composed s
 
 Narrative personalization in games --- the capacity of a game's story to adapt meaningfully to individual player behaviour --- remains an under-explored intersection of artificial intelligence, human--computer interaction, and game design. Most commercial games deliver identical narrative content regardless of how a player engages with the world, foregoing the well-established link between personalized experience and intrinsic motivation.
 
-This dissertation presents the design, implementation, and evaluation of a closed-loop Unity plugin for real-time dynamic narrative personalization. The system integrates five tightly coupled modules: (1)~a telemetry collector that streams 23~behavioural signals from the game client every five seconds; (2)~a player modelling service that derives an 11-feature representation, a six-dimensional continuous Hexad player-type profile, and a Flow state classification (FLOW, BOREDOM, ANXIETY, APATHY) from those signals; (3)~a narrative generation service that employs Retrieval-Augmented Generation (RAG) over a structured lore corpus using the sentence-transformers all-MiniLM-L6-v2 model together with an episodic session memory store; (4)~an adaptation engine based on Proximal Policy Optimization (PPO), trained via Stable-Baselines3 over a custom Gymnasium Markov Decision Process environment; and (5)~a Unity Content Injection Module that surfaces the generated narrative inside a 2D top-down RPG testbed.
+This dissertation presents the design, implementation, and evaluation of a closed-loop Unity plugin for real-time dynamic narrative personalization. The system integrates five tightly coupled modules: (1)~a telemetry collector that streams 23~behavioural signals from the game client every five seconds; (2)~a player modelling service that derives an 11-feature representation, a six-dimensional continuous Hexad player-type profile, and a Flow state classification (FLOW, BOREDOM, ANXIETY, APATHY) from those signals; (3)~a narrative generation service that employs Retrieval-Augmented Generation (RAG) over a structured lore corpus using the sentence-transformers all-MiniLM-L6-v2 model together with an episodic session memory store; (4)~an adaptation engine based on Proximal Policy Optimization (PPO), trained via Stable-Baselines3 over a custom Gymnasium Markov Decision Process environment; and (5)~a Unity Content Injection Module that surfaces the generated narrative inside a 3D RPG testbed built on the AnyRPG Core framework.
 
 A key novelty is the derivation of Hexad player-type scores entirely from gameplay telemetry --- without requiring the player to complete a questionnaire --- enabling continuous, within-session profiling. The PPO agent selects among eight narrative actions (e.g., PROVIDE\_GUIDANCE, ADD\_MYSTERY, INCREASE\_URGENCY) based on the current Flow state and Hexad profile, with a reward function shaped around challenge--skill balance. A cold-start heuristic governs the first 120~seconds before the learned policy activates.
 
@@ -126,13 +126,13 @@ The work makes six original contributions: telemetry-derived Hexad profiling, RA
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
 
-I owe a great deal to my supervisor, [Supervisor Name], who pushed back on vague ideas until they became concrete ones and gave honest feedback when I needed it most. This project would look very different without their guidance.
+I would like to express my gratitude to my supervisor, Bimali Wickramasinghe, who pushed back on vague ideas until they became concrete ones and gave honest feedback when I needed it most. This project would look very different without her guidance.
 
 Thanks are due to the staff at Informatics Institute of Technology and Robert Gordon University, and to the participants who gave up their time to play through the testbed game and answer my questions afterward.
 
-This system stands on the shoulders of several open-source projects --- FastAPI, Stable-Baselines3, Gymnasium, Ollama, and sentence-transformers --- and I am grateful to the communities that build and maintain them.
+This system stands on the shoulders of several open-source projects --- AnyRPG Core, FastAPI, Stable-Baselines3, Gymnasium, Ollama, and sentence-transformers --- and I am grateful to the communities that build and maintain them.
 
-Finally, thank you to my family and friends for putting up with months of late nights and one-sided conversations about reward functions.
+Finally, thank you to my family and friends for their unwavering support and patience throughout this journey. 
 
 \clearpage
 

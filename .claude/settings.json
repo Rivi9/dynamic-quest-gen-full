@@ -6,7 +6,8 @@
       "Bash(grep -n \"currentLocation.*Ashfen\\\\|Thornwood\" /e/Projects/fyp/v2/docs/plans/*.md)",
       "Bash(find /e/Projects/fyp/v2 -type f \\\\\\(-name *.py -o -name *.md -o -name *.cs -o -name *.json \\\\\\) ! -path */Library/* ! -path */Core/System/*)",
       "Bash(xargs grep:*)",
-      "Bash(grep -E \"^.*\\(Dialog|Quest|UnitProfile|Faction|SceneNode\\).*$\")"
+      "Bash(grep -E \"^.*\\(Dialog|Quest|UnitProfile|Faction|SceneNode\\).*$\")",
+      "Bash(pdflatex -interaction=nonstopmode -halt-on-error main.tex)"
     ]
   }
 }
