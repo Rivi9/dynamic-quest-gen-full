@@ -3287,6 +3287,69 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 135621580}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &159517523
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 159517525}
+  - component: {fileID: 159517524}
+  m_Layer: 0
+  m_Name: EnemySpawn_Minion_3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &159517524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159517523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 420a76187a901c342b41ace39e7d8f17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unitProfileNames:
+  - Enemy Minion
+  dynamicLevel: 1
+  unitLevel: 1
+  extraLevels: 0
+  defaultToughness: 
+  spawnTimer: 0
+  spawnDelay: 0
+  despawnDelay: 0
+  respawnTimer: 60
+  respawnOn: 0
+  maxUnits: 1
+  suppressAutoSpawn: 0
+  triggerBased: 0
+  triggerLimit: 0
+  spawnDensity: 0.01
+  pointBased: 1
+  forceDespawnUnits: 0
+  prerequisiteConditions: []
+--- !u!4 &159517525
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159517523}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 137.17, y: 0, z: 6.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 10
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &160556225
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7213,6 +7276,69 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 423952387}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &432724534
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 432724536}
+  - component: {fileID: 432724535}
+  m_Layer: 0
+  m_Name: EnemySpawn_Minion_2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &432724535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 432724534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 420a76187a901c342b41ace39e7d8f17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unitProfileNames:
+  - Enemy Minion
+  dynamicLevel: 1
+  unitLevel: 1
+  extraLevels: 0
+  defaultToughness: 
+  spawnTimer: 0
+  spawnDelay: 0
+  despawnDelay: 0
+  respawnTimer: 60
+  respawnOn: 0
+  maxUnits: 1
+  suppressAutoSpawn: 0
+  triggerBased: 0
+  triggerLimit: 0
+  spawnDensity: 0.01
+  pointBased: 1
+  forceDespawnUnits: 0
+  prerequisiteConditions: []
+--- !u!4 &432724536
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 432724534}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 132.17, y: 0, z: 19.81}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 9
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &437661395
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26592,6 +26718,69 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1789017257}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1791347153
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1791347155}
+  - component: {fileID: 1791347154}
+  m_Layer: 0
+  m_Name: EnemySpawn_Minion_1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1791347154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1791347153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 420a76187a901c342b41ace39e7d8f17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unitProfileNames:
+  - Enemy Minion
+  dynamicLevel: 1
+  unitLevel: 1
+  extraLevels: 0
+  defaultToughness: 
+  spawnTimer: 0
+  spawnDelay: 0
+  despawnDelay: 0
+  respawnTimer: 60
+  respawnOn: 0
+  maxUnits: 1
+  suppressAutoSpawn: 0
+  triggerBased: 0
+  triggerLimit: 0
+  spawnDensity: 0.01
+  pointBased: 1
+  forceDespawnUnits: 0
+  prerequisiteConditions: []
+--- !u!4 &1791347155
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1791347153}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 132.63, y: 0, z: 8.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1794557014
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -29690,6 +29879,69 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1998762509}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1999378503
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1999378505}
+  - component: {fileID: 1999378504}
+  m_Layer: 0
+  m_Name: EnemySpawn_Boss_1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1999378504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1999378503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 420a76187a901c342b41ace39e7d8f17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unitProfileNames:
+  - Enemy Boss
+  dynamicLevel: 1
+  unitLevel: 1
+  extraLevels: 0
+  defaultToughness: 
+  spawnTimer: 0
+  spawnDelay: 0
+  despawnDelay: 0
+  respawnTimer: 60
+  respawnOn: 0
+  maxUnits: 1
+  suppressAutoSpawn: 0
+  triggerBased: 0
+  triggerLimit: 0
+  spawnDensity: 0.01
+  pointBased: 1
+  forceDespawnUnits: 0
+  prerequisiteConditions: []
+--- !u!4 &1999378505
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1999378503}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 20, y: 0, z: 15}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 11
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2004009646
 PrefabInstance:
   m_ObjectHideFlags: 0

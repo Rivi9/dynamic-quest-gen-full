@@ -21,6 +21,8 @@ public class ExplorationTracker : MonoBehaviour
     private readonly HashSet<Vector2Int> _visited = new HashSet<Vector2Int>();
     private SystemGameManager _sgm;
     private float _timer;
+    private Vector3 _lastPosition;
+    private bool _hasLastPosition;
 
     private void Start()
     {
@@ -34,14 +36,27 @@ public class ExplorationTracker : MonoBehaviour
 
     private void Update()
     {
+        var unit = _sgm?.PlayerManager?.ActiveCharacter?.UnitController;
+        if (unit == null) return;
+
+        var pos = unit.transform.position;
+        if (!_hasLastPosition)
+        {
+            _lastPosition = pos;
+            _hasLastPosition = true;
+        }
+
+        // Feed movement back into telemetry so idle time does not accumulate while walking.
+        if (Vector3.Distance(pos, _lastPosition) > 0.1f)
+        {
+            logger?.OnPlayerMoved();
+            _lastPosition = pos;
+        }
+
         _timer += Time.deltaTime;
         if (_timer < sampleInterval) return;
         _timer = 0f;
 
-        var unit = _sgm?.PlayerManager?.ActiveCharacter?.UnitController;
-        if (unit == null) return;
-
-        var pos   = unit.transform.position;
         var cell  = new Vector2Int(
             Mathf.FloorToInt(pos.x / cellSize),
             Mathf.FloorToInt(pos.z / cellSize)
@@ -55,5 +70,6 @@ public class ExplorationTracker : MonoBehaviour
     public void ResetOnLevelLoad()
     {
         _visited.Clear();
+        _hasLastPosition = false;
     }
 }

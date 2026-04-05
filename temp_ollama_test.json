@@ -1,0 +1,9 @@
+{
+  "model": "phi3.5",
+  "messages": [
+    {"role": "system", "content": "Output ONLY valid JSON: {\"type\":\"description\",\"content\":\"text\",\"speaker\":null,\"emotional_tone\":\"neutral\"}"},
+    {"role": "user", "content": "Return a short in-world line as JSON only."}
+  ],
+  "stream": false,
+  "format": "json"
+}

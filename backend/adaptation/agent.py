@@ -18,8 +18,17 @@ MODEL_PATH = "./data/ppo_narrative_agent"
 class NarrativeAgent:
     def __init__(self, auto_train: bool = False):
         self._model = None
-        if auto_train:
+        model_path = Path(MODEL_PATH + ".zip")
+        if model_path.exists():
+            self._model = self._load_existing()
+        elif auto_train:
             self._model = self._load_or_train()
+
+    def _load_existing(self):
+        from stable_baselines3 import PPO
+        from backend.adaptation.rl_env import NarrativeAdaptationEnv
+
+        return PPO.load(MODEL_PATH, env=NarrativeAdaptationEnv())
 
     def _load_or_train(self):
         from stable_baselines3 import PPO
@@ -27,7 +36,7 @@ class NarrativeAgent:
 
         path = Path(MODEL_PATH + ".zip")
         if path.exists():
-            return PPO.load(MODEL_PATH, env=NarrativeAdaptationEnv())
+            return self._load_existing()
 
         from stable_baselines3.common.env_util import make_vec_env
         env = make_vec_env(NarrativeAdaptationEnv, n_envs=4)

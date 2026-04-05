@@ -1,0 +1,20 @@
+{
+  "model": "phi3.5",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a narrative writer for a dark fantasy RPG. Output ONLY valid JSON. Required JSON schema: {\"type\":\"dialogue|description|quest_update\",\"content\":\"the narrative text\",\"speaker\":\"character name or null\",\"emotional_tone\":\"hopeful|neutral|tense|mysterious|humorous\"}"
+    },
+    {
+      "role": "user",
+      "content": "PLAYER STATE: Flow ANXIETY. NARRATIVE ACTION: PROVIDE_GUIDANCE. Generate one short narrative moment appropriate for this action and player state. Varis gives a tactically useful hint. Generate the narrative JSON:"
+    }
+  ],
+  "stream": false,
+  "format": "json",
+  "options": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "num_predict": 200
+  }
+}
