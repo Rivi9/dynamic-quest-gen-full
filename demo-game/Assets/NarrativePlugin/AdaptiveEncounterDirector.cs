@@ -21,6 +21,7 @@ public class AdaptiveEncounterDirector : MonoBehaviour
     [Header("Guidance / Support")]
     [SerializeField] private List<UnitSpawnNode> supportSpawnNodes = new List<UnitSpawnNode>();
     [SerializeField] private float supportCooldownSeconds = 30f;
+    [SerializeField] private float recentCombatGraceSeconds = 30f;
     [SerializeField] private string guidanceQuestStage = "Follow Varis's safer northern route";
 
     [Header("Mystery / Lore")]
@@ -30,6 +31,7 @@ public class AdaptiveEncounterDirector : MonoBehaviour
     private int _nextSupportIndex;
     private float _lastReinforcementTime = -999f;
     private float _lastSupportTime = -999f;
+    private float _lastCombatSeenTime = -999f;
 
     private void Start()
     {
@@ -42,6 +44,9 @@ public class AdaptiveEncounterDirector : MonoBehaviour
         if (systemGameManager == null)
             systemGameManager = FindObjectOfType<SystemGameManager>();
 
+        if (systemGameManager?.SystemEventManager != null)
+            systemGameManager.SystemEventManager.OnTakeDamage += HandleTakeDamage;
+
         if (injector == null)
         {
             Debug.LogWarning("[AdaptiveEncounterDirector] ContentInjector not found; adaptive gameplay changes disabled.");
@@ -52,10 +57,19 @@ public class AdaptiveEncounterDirector : MonoBehaviour
         injector.OnNarrativeReceived.AddListener(HandleNarrative);
     }
 
+    private void Update()
+    {
+        if (systemGameManager?.PlayerManager?.ActiveCharacter?.CharacterCombat?.GetInCombat() == true)
+            _lastCombatSeenTime = Time.time;
+    }
+
     private void OnDestroy()
     {
         if (injector != null)
             injector.OnNarrativeReceived.RemoveListener(HandleNarrative);
+
+        if (systemGameManager?.SystemEventManager != null)
+            systemGameManager.SystemEventManager.OnTakeDamage -= HandleTakeDamage;
     }
 
     private void HandleNarrative(NarrativeResponse response)
@@ -134,15 +148,18 @@ public class AdaptiveEncounterDirector : MonoBehaviour
 
     private bool IsCombatPressureActive()
     {
-        if (systemGameManager == null)
-            return false;
+        // Guidance support can arrive a bit after the combat moment because the backend is asynchronous.
+        return Time.time - _lastCombatSeenTime <= recentCombatGraceSeconds;
+    }
 
-        var activeCharacter = systemGameManager.PlayerManager?.ActiveCharacter;
-        if (activeCharacter?.CharacterCombat == null)
-            return false;
+    private void HandleTakeDamage(IAbilityCaster source, CharacterUnit target, int damage, string abilityName)
+    {
+        var activeCharacter = systemGameManager?.PlayerManager?.ActiveCharacter;
+        if (activeCharacter == null || target?.BaseCharacter != activeCharacter)
+            return;
 
-        // Guidance support should only appear while the player is actively in combat.
-        return activeCharacter.CharacterCombat.GetInCombat();
+        if (damage > 0)
+            _lastCombatSeenTime = Time.time;
     }
 
     private void UpdateQuestStage(string nextStage)
