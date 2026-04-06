@@ -56,10 +56,27 @@
 % -- Chapter formatting --
 \titleformat{\chapter}[display]
   {\normalfont\large\centering}
-  {\itshape Chapter \thechapter}
+  {\itshape\chaptertitlename\ \thechapter}
   {10pt}
   {\uppercase}
 \titlespacing*{\chapter}{0pt}{0pt}{25pt}
+
+% -- TOC / LOF / LOT titles to match chapter style (uppercase, centered) --
+\renewcommand{\contentsname}{\uppercase{Contents}}
+\renewcommand{\listfigurename}{\uppercase{List of Figures}}
+\renewcommand{\listtablename}{\uppercase{List of Tables}}
+\renewcommand{\cfttoctitlefont}{\hfill\normalfont\large}
+\renewcommand{\cftaftertoctitle}{\hfill}
+\renewcommand{\cftloftitlefont}{\hfill\normalfont\large}
+\renewcommand{\cftafterloftitle}{\hfill}
+\renewcommand{\cftlottitlefont}{\hfill\normalfont\large}
+\renewcommand{\cftafterlottitle}{\hfill}
+\setlength{\cftbeforetoctitleskip}{0pt}
+\setlength{\cftbeforeloftitleskip}{0pt}
+\setlength{\cftbeforelottitleskip}{0pt}
+\setlength{\cftaftertoctitleskip}{25pt}
+\setlength{\cftafterloftitleskip}{25pt}
+\setlength{\cftafterlottitleskip}{25pt}
 
 % -- Section formatting --
 \titleformat{\section}
@@ -99,10 +116,9 @@
 \input{chapters/ch1_introduction}
 \input{chapters/ch2_literature_review}
 \input{chapters/ch3_methodology}
-\input{chapters/ch4_implementation}
-\input{chapters/ch5_results}
-\input{chapters/ch6_discussion}
-\input{chapters/ch7_conclusion}
+\input{chapters/ch4_results}
+\input{chapters/ch5_discussion}
+\input{chapters/ch6_conclusion}
 
 % --- References ---
 \addcontentsline{toc}{chapter}{References}

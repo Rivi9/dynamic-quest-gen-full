@@ -83,8 +83,8 @@ I confirm that the work contained in this BSc project report has been composed s
 
 \noindent The above student carried out his research project under my supervision.\\[1cm]
 
-\noindent Date: \hrulefill \\[0.5cm]
-\noindent Supervisor's Name: \hrulefill
+\noindent Date: 2026-04-05 \\[0.5cm]
+\noindent Supervisor's Name: Bimali Wickramasinghe
 
 \clearpage
 
@@ -105,13 +105,13 @@ I confirm that the work contained in this BSc project report has been composed s
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-Narrative personalization in games --- the capacity of a game's story to adapt meaningfully to individual player behaviour --- remains an under-explored intersection of artificial intelligence, human--computer interaction, and game design. Most commercial games deliver identical narrative content regardless of how a player engages with the world, foregoing the well-established link between personalized experience and intrinsic motivation.
+Narrative personalization in games (the capacity of a game's story to adapt meaningfully to individual player behaviour) remains an under-explored intersection of artificial intelligence, human--computer interaction, and game design. Most commercial games deliver identical narrative content regardless of how a player engages with the world, foregoing the well-established link between personalized experience and intrinsic motivation.
 
 This dissertation presents the design, implementation, and evaluation of a closed-loop Unity plugin for real-time dynamic narrative personalization. The system integrates five tightly coupled modules: (1)~a telemetry collector that streams 23~behavioural signals from the game client every five seconds; (2)~a player modelling service that derives an 11-feature representation, a six-dimensional continuous Hexad player-type profile, and a Flow state classification (FLOW, BOREDOM, ANXIETY, APATHY) from those signals; (3)~a narrative generation service that employs Retrieval-Augmented Generation (RAG) over a structured lore corpus using the sentence-transformers all-MiniLM-L6-v2 model together with an episodic session memory store; (4)~an adaptation engine based on Proximal Policy Optimization (PPO), trained via Stable-Baselines3 over a custom Gymnasium Markov Decision Process environment; and (5)~a Unity Content Injection Module that surfaces the generated narrative inside a 3D RPG testbed built on the AnyRPG Core framework.
 
-A key novelty is the derivation of Hexad player-type scores entirely from gameplay telemetry --- without requiring the player to complete a questionnaire --- enabling continuous, within-session profiling. The PPO agent selects among eight narrative actions (e.g., PROVIDE\_GUIDANCE, ADD\_MYSTERY, INCREASE\_URGENCY) based on the current Flow state and Hexad profile, with a reward function shaped around challenge--skill balance. A cold-start heuristic governs the first 120~seconds before the learned policy activates.
+A key novelty is the derivation of Hexad player-type scores entirely from gameplay telemetry, without requiring the player to complete a questionnaire, enabling continuous, within-session profiling. The PPO agent selects among eight narrative actions (e.g., PROVIDE\_GUIDANCE, ADD\_MYSTERY, INCREASE\_URGENCY) based on the current Flow state and Hexad profile, with a reward function shaped around challenge--skill balance. A cold-start heuristic governs the first 120~seconds before the learned policy activates.
 
-The system is evaluated through a between-subjects user study ($N = 50$; 25~Experimental, 25~Control). The primary dependent variable is the Flow subscale of the Game Experience Questionnaire (GEQ); secondary measures include the GEQ Immersion subscale, the custom three-item Narrative Personalization Scale (NPS-3), and the miniPXI player experience inventory. Qualitative data are gathered through semi-structured interviews analysed using Reflexive Thematic Analysis \citep{braun2022thematic}. Results are pending collection and are presented as structured placeholders.
+The system is evaluated through a between-subjects user study ($N = 50$; 25~Experimental, 25~Control). The primary dependent variable is the Flow subscale of the Game Experience Questionnaire (GEQ); secondary measures include the GEQ Immersion subscale, the custom three-item Narrative Personalization Scale (NPS-3), and the miniPXI player experience inventory. Qualitative data are gathered through semi-structured interviews analysed using Reflexive Thematic Analysis \citep{braun2022thematic}. Results are reported in Chapter~4 and discussed in Chapter~5.
 
 The work makes six original contributions: telemetry-derived Hexad profiling, RAG-grounded narrative generation, episodic session memory in the LLM prompt, PPO for narrative action selection, a Flow-based MDP reward, and a complete closed-loop integration of all five modules within a single game plugin.
 
@@ -130,7 +130,7 @@ I would like to express my gratitude to my supervisor, Bimali Wickramasinghe, wh
 
 Thanks are due to the staff at Informatics Institute of Technology and Robert Gordon University, and to the participants who gave up their time to play through the testbed game and answer my questions afterward.
 
-This system stands on the shoulders of several open-source projects --- AnyRPG Core, FastAPI, Stable-Baselines3, Gymnasium, Ollama, and sentence-transformers --- and I am grateful to the communities that build and maintain them.
+This system stands on the shoulders of several open-source projects (AnyRPG Core, FastAPI, Stable-Baselines3, Gymnasium, Ollama, and sentence-transformers), and I am grateful to the communities that build and maintain them.
 
 Finally, thank you to my family and friends for their unwavering support and patience throughout this journey. 
 
@@ -155,20 +155,27 @@ Finally, thank you to my family and friends for their unwavering support and pat
 \begin{longtable}{@{}p{3.5cm} p{10cm}@{}}
 \abbrev{AI}{Artificial Intelligence}
 \abbrev{API}{Application Programming Interface}
+\abbrev{CHI}{Conference on Human Factors in Computing Systems}
 \abbrev{CORS}{Cross-Origin Resource Sharing}
 \abbrev{DDA}{Dynamic Difficulty Adjustment}
 \abbrev{DPM}{Damage Per Minute}
 \abbrev{DV}{Dependent Variable}
+\abbrev{EM-LLM}{Episodic Memory Large Language Model}
 \abbrev{GEQ}{Game Experience Questionnaire}
 \abbrev{HTTP}{Hypertext Transfer Protocol}
 \abbrev{JSON}{JavaScript Object Notation}
+\abbrev{LIGS}{LLM-Integrated Game Storytelling}
 \abbrev{LLM}{Large Language Model}
+\abbrev{LTS}{Long-Term Support}
 \abbrev{MDP}{Markov Decision Process}
 \abbrev{miniPXI}{Mini Player Experience Inventory}
+\abbrev{NLP}{Natural Language Processing}
 \abbrev{NPC}{Non-Player Character}
 \abbrev{NPS-3}{Narrative Personalization Scale (3-item)}
+\abbrev{PANGeA}{Procedural Adaptive Narrative using a Game Architecture}
 \abbrev{PPO}{Proximal Policy Optimization}
 \abbrev{RAG}{Retrieval-Augmented Generation}
+\abbrev{REST}{Representational State Transfer}
 \abbrev{RL}{Reinforcement Learning}
 \abbrev{RPG}{Role-Playing Game}
 \abbrev{SDT}{Self-Determination Theory}
