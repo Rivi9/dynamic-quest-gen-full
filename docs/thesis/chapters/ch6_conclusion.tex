@@ -41,13 +41,13 @@ What follows is a candid account of how the project actually went: what worked, 
 
 The project ran for roughly seven months, from initial reading in September 2025 to submission in April 2026. The decision to use a locally hosted LLM (Ollama with Phi-3.5 Mini) rather than a cloud API was made early and proved to be one of the most consequential choices: it eliminated network dependency and data governance concerns but introduced generation quality constraints that shaped the prompt engineering effort for the rest of the project.
 
-Time management was a persistent problem. Integrating five modules across three technology stacks (Python, C\#, Ollama) took longer than I expected; each interface worked in isolation but broke in combination. Weekly logbook entries helped, mainly because writing down what went wrong forced me to think about why.
+Time management was a persistent problem. Integrating five modules across three technology stacks (Python, C\#, Ollama) took longer than I expected; each interface worked in isolation but broke in combination.
 
 Figure~\ref{fig:gantt} shows the project timeline as it actually unfolded. Major phases overlap deliberately: implementation began before design was finalised, and thesis writing ran alongside development. Milestones (red diamonds) mark proposal approval, system completion, and final submission.
 
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
+\resizebox{0.85\textwidth}{!}{%
 \begin{ganttchart}[
     x unit=0.55cm,
     y unit title=0.5cm,
