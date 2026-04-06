@@ -14825,6 +14825,7 @@ GameObject:
   - component: {fileID: 472096890}
   - component: {fileID: 472096889}
   - component: {fileID: 472096895}
+  - component: {fileID: 472096896}
   m_Layer: 0
   m_Name: NarrativeSystem
   m_TagString: Untagged
@@ -14993,8 +14994,56 @@ MonoBehaviour:
   - {fileID: 479101753}
   - {fileID: 1184879700}
   supportCooldownSeconds: 5
+  recentCombatGraceSeconds: 30
   guidanceQuestStage: Follow Varis's safer northern route
   mysteryQuestStage: Investigate the strange sign near the ridge
+--- !u!114 &472096896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472096888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f948f50af4bcb444bbbee819fcf4f1f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config: {fileID: 11400000, guid: b6519315981dd0c4d8122e540782301a, type: 2}
+  logger: {fileID: 472096893}
+  narrativeManager: {fileID: 472096891}
+  injector: {fileID: 472096892}
+  systemGameManager: {fileID: 0}
+  playerModelPollingInterval: 20
+  minimumSessionSeconds: 15
+  boredomQuestStage: Reports of movement on the ridge. Sweep the northern route for
+    signs of escalation.
+  anxietyQuestStage: Hold the safer line and regroup with nearby allies before pressing
+    forward.
+  apathyQuestStage: A strange omen lingers near the Vault. Investigate the source
+    and recover your focus.
+  explorerQuestStage: Investigate the old Vault markings and uncover what the Chronicler
+    has not yet explained.
+  socializerQuestStage: Speak with Varis and the Chronicler to gather guidance before
+    the next push.
+  achieverQuestStage: Secure the northern approach and complete the patrol objectives
+    with minimal losses.
+  disruptorQuestStage: Break the enemy line with aggressive action before the Host
+    can reorganize.
+  freeSpiritQuestStage: Scout beyond the main path and look for an alternate route
+    around the contested centre.
+  philanthropistQuestStage: Aid the defenders and stabilize the line where the fighting
+    is turning against them.
+  acceptMappedQuestIntoQuestLog: 1
+  explorerQuestResource: Visit Zone
+  socializerQuestResource: Dialog Objective
+  achieverQuestResource: Kill Things
+  disruptorQuestResource: Kill Things
+  freeSpiritQuestResource: Use Interactable
+  philanthropistQuestResource: Dialog Introduction
+  anxietyQuestResource: Dialog Introduction
+  boredomQuestResource: Kill Things
+  apathyQuestResource: Visit Zone
 --- !u!1 &472172522
 GameObject:
   m_ObjectHideFlags: 0
