@@ -36,6 +36,8 @@ public class PlayerDataLogger : MonoBehaviour
 {
     [SerializeField] private PluginConfig config;
 
+    private static PlayerDataLogger _instance;
+
     private TelemetryBatch _currentBatch;
     private string _sessionId;
     private float _windowStart;
@@ -65,6 +67,14 @@ public class PlayerDataLogger : MonoBehaviour
 
     private void Awake()
     {
+        if (_instance != null && _instance != this)
+        {
+            Debug.LogWarning("[PlayerDataLogger] Duplicate logger detected. Destroying this instance to preserve the current session.");
+            Destroy(gameObject);
+            return;
+        }
+
+        _instance = this;
         DontDestroyOnLoad(gameObject);
         Debug.Log("[PlayerDataLogger] Awake() called. Config assigned: " + (config != null));
         if (config == null)
@@ -83,6 +93,9 @@ public class PlayerDataLogger : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_instance == this)
+            _instance = null;
+
         CancelInvoke(nameof(SendBatch));
         StopAllCoroutines();
     }

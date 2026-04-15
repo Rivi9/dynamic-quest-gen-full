@@ -14826,6 +14826,7 @@ GameObject:
   - component: {fileID: 472096889}
   - component: {fileID: 472096895}
   - component: {fileID: 472096896}
+  - component: {fileID: 472096897}
   m_Layer: 0
   m_Name: NarrativeSystem
   m_TagString: Untagged
@@ -14862,6 +14863,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   logger: {fileID: 472096893}
   narrativeManager: {fileID: 472096891}
+  triggerDirector: {fileID: 472096897}
 --- !u!114 &472096891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14879,7 +14881,7 @@ MonoBehaviour:
   logger: {fileID: 472096893}
   currentLocation: FeaturesDemoZone
   currentQuestStage: Patrol the Contested Vale
-  narrativePollingInterval: 50
+  narrativePollingInterval: 60
 --- !u!114 &472096892
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15014,6 +15016,7 @@ MonoBehaviour:
   narrativeManager: {fileID: 472096891}
   injector: {fileID: 472096892}
   systemGameManager: {fileID: 0}
+  triggerDirector: {fileID: 472096897}
   playerModelPollingInterval: 20
   minimumSessionSeconds: 15
   boredomQuestStage: Reports of movement on the ridge. Sweep the northern route for
@@ -15044,6 +15047,28 @@ MonoBehaviour:
   anxietyQuestResource: Dialog Introduction
   boredomQuestResource: Kill Things
   apathyQuestResource: Visit Zone
+--- !u!114 &472096897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472096888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7b193a5fab51fd43a6f3c72e61242d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  narrativeManager: {fileID: 472096891}
+  systemGameManager: {fileID: 0}
+  combatPressureCooldownSeconds: 20
+  combatVictoryCooldownSeconds: 20
+  dialogueCooldownSeconds: 20
+  explorationCooldownSeconds: 30
+  questCooldownSeconds: 15
+  idleCooldownSeconds: 60
+  idleThresholdSeconds: 25
+  movementThreshold: 0.2
 --- !u!1 &472172522
 GameObject:
   m_ObjectHideFlags: 0

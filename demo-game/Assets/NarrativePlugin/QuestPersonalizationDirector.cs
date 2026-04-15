@@ -38,6 +38,7 @@ public class QuestPersonalizationDirector : MonoBehaviour
     [SerializeField] private NarrativeManager narrativeManager;
     [SerializeField] private ContentInjector injector;
     [SerializeField] private SystemGameManager systemGameManager;
+    [SerializeField] private NarrativeTriggerDirector triggerDirector;
 
     [Header("Polling")]
     [SerializeField] private float playerModelPollingInterval = 20f;
@@ -68,6 +69,26 @@ public class QuestPersonalizationDirector : MonoBehaviour
     [SerializeField] private string boredomQuestResource = "Kill Things";
     [SerializeField] private string apathyQuestResource = "Visit Zone";
 
+    [Header("Combined Flow + Hexad Quest Mapping")]
+    [SerializeField] private string anxietyExplorerQuestResource = "Visit Zone";
+    [SerializeField] private string anxietySocializerQuestResource = "Dialog Introduction";
+    [SerializeField] private string anxietyAchieverQuestResource = "Kill Things";
+    [SerializeField] private string anxietyDisruptorQuestResource = "Kill Things";
+    [SerializeField] private string anxietyFreeSpiritQuestResource = "Use Interactable";
+    [SerializeField] private string anxietyPhilanthropistQuestResource = "Dialog Introduction";
+    [SerializeField] private string boredomExplorerQuestResource = "Visit Zone";
+    [SerializeField] private string boredomSocializerQuestResource = "Dialog Objective";
+    [SerializeField] private string boredomAchieverQuestResource = "Kill Things";
+    [SerializeField] private string boredomDisruptorQuestResource = "Kill Things";
+    [SerializeField] private string boredomFreeSpiritQuestResource = "Use Interactable";
+    [SerializeField] private string boredomPhilanthropistQuestResource = "Dialog Introduction";
+    [SerializeField] private string apathyExplorerQuestResource = "Visit Zone";
+    [SerializeField] private string apathySocializerQuestResource = "Dialog Objective";
+    [SerializeField] private string apathyAchieverQuestResource = "Kill Things";
+    [SerializeField] private string apathyDisruptorQuestResource = "Kill Things";
+    [SerializeField] private string apathyFreeSpiritQuestResource = "Use Interactable";
+    [SerializeField] private string apathyPhilanthropistQuestResource = "Dialog Introduction";
+
     private string _lastQuestStage;
     private string _lastAssignedQuestResource;
 
@@ -84,6 +105,9 @@ public class QuestPersonalizationDirector : MonoBehaviour
 
         if (systemGameManager == null)
             systemGameManager = FindObjectOfType<SystemGameManager>();
+
+        if (triggerDirector == null)
+            triggerDirector = FindObjectOfType<NarrativeTriggerDirector>();
 
         if (logger == null || narrativeManager == null)
         {
@@ -150,6 +174,7 @@ public class QuestPersonalizationDirector : MonoBehaviour
         _lastQuestStage = nextQuestStage;
         narrativeManager.currentQuestStage = nextQuestStage;
         TryAssignMappedQuest(response, dominantHexad);
+        triggerDirector?.TriggerQuestUpdate($"player_model_{response.flow_state.ToLower()}_{dominantHexad}");
         Debug.Log($"[QuestPersonalizationDirector] Dominant model => {response.flow_state} / {dominantHexad}. Quest context updated to: {nextQuestStage}");
         webReq.Dispose();
     }
@@ -239,8 +264,13 @@ public class QuestPersonalizationDirector : MonoBehaviour
         if (quest == null)
             return;
 
-        if (!systemGameManager.QuestLog.HasQuest(quest.ResourceName))
-            systemGameManager.QuestLog.AcceptQuest(quest);
+        if (systemGameManager.QuestLog.HasQuest(quest.ResourceName))
+        {
+            _lastAssignedQuestResource = quest.ResourceName;
+            return;
+        }
+
+        systemGameManager.QuestLog.AcceptQuest(quest);
 
         systemGameManager.QuestLog.ShowQuestLogDescription(quest);
         _lastAssignedQuestResource = quest.ResourceName;
@@ -266,11 +296,38 @@ public class QuestPersonalizationDirector : MonoBehaviour
         switch (flowState)
         {
             case "ANXIETY":
-                return anxietyQuestResource;
+                return GetCombinedFlowQuestResource(
+                    dominantHexad,
+                    anxietyExplorerQuestResource,
+                    anxietySocializerQuestResource,
+                    anxietyAchieverQuestResource,
+                    anxietyDisruptorQuestResource,
+                    anxietyFreeSpiritQuestResource,
+                    anxietyPhilanthropistQuestResource,
+                    anxietyQuestResource
+                );
             case "BOREDOM":
-                return boredomQuestResource;
+                return GetCombinedFlowQuestResource(
+                    dominantHexad,
+                    boredomExplorerQuestResource,
+                    boredomSocializerQuestResource,
+                    boredomAchieverQuestResource,
+                    boredomDisruptorQuestResource,
+                    boredomFreeSpiritQuestResource,
+                    boredomPhilanthropistQuestResource,
+                    boredomQuestResource
+                );
             case "APATHY":
-                return apathyQuestResource;
+                return GetCombinedFlowQuestResource(
+                    dominantHexad,
+                    apathyExplorerQuestResource,
+                    apathySocializerQuestResource,
+                    apathyAchieverQuestResource,
+                    apathyDisruptorQuestResource,
+                    apathyFreeSpiritQuestResource,
+                    apathyPhilanthropistQuestResource,
+                    apathyQuestResource
+                );
         }
 
         return dominantHexad switch
@@ -283,5 +340,29 @@ public class QuestPersonalizationDirector : MonoBehaviour
             "philanthropist" => philanthropistQuestResource,
             _ => string.Empty
         };
+    }
+
+    private string GetCombinedFlowQuestResource(
+        string dominantHexad,
+        string explorerResource,
+        string socializerResource,
+        string achieverResource,
+        string disruptorResource,
+        string freeSpiritResource,
+        string philanthropistResource,
+        string fallbackResource)
+    {
+        var mapped = dominantHexad switch
+        {
+            "explorer" => explorerResource,
+            "socializer" => socializerResource,
+            "achiever" => achieverResource,
+            "disruptor" => disruptorResource,
+            "free_spirit" => freeSpiritResource,
+            "philanthropist" => philanthropistResource,
+            _ => fallbackResource
+        };
+
+        return string.IsNullOrWhiteSpace(mapped) ? fallbackResource : mapped;
     }
 }
