@@ -54,6 +54,9 @@ PLAYER STATE:
 
 LOCATION: {location}
 ACTIVE QUEST: {quest_stage}
+TRIGGER TYPE: {trigger_type}
+TRIGGER REASON: {trigger_reason}
+TRIGGER IMPORTANCE: {importance}
 
 NARRATIVE ACTION: {action}
 Guidance for this action: {action_guidance}
@@ -82,6 +85,9 @@ class PromptBuilder:
         action: NarrativeAction,
         location: str = "Unknown",
         quest_stage: str = "None",
+        trigger_type: str = "poll",
+        trigger_reason: str = "interval",
+        importance: str = "low",
         lore_context: list[str] | None = None,
         memory_context: str = "",
     ) -> tuple[str, str]:
@@ -106,6 +112,9 @@ class PromptBuilder:
             action_guidance=action_guidance,
             location=location,
             quest_stage=quest_stage,
+            trigger_type=trigger_type,
+            trigger_reason=trigger_reason,
+            importance=importance,
             lore_context=lore_str,
             memory_context=memory_context,
         )

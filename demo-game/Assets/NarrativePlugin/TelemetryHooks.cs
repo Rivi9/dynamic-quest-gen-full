@@ -11,10 +11,13 @@ public class TelemetryHooks : MonoBehaviour
 {
     [SerializeField] private PlayerDataLogger logger;
     [SerializeField] private NarrativeManager narrativeManager;
+    [SerializeField] private NarrativeTriggerDirector triggerDirector;
 
     private SystemGameManager _sgm;
     private CharacterCombat   _playerCombat;
     private bool              _hooked;          // true once SGM events are subscribed
+    private Dialog            _activeDialog;
+    private bool              _dialogCompletedThisOpen;
 
     // ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -26,6 +29,9 @@ public class TelemetryHooks : MonoBehaviour
             enabled = false;
             return;
         }
+
+        if (triggerDirector == null)
+            triggerDirector = FindObjectOfType<NarrativeTriggerDirector>();
 
         // Subscribe to scene load so we can retry finding SGM after a scene transition
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -68,6 +74,11 @@ public class TelemetryHooks : MonoBehaviour
         _sgm.SystemEventManager.OnTakeDamage             += HandleTakeDamage;
         _sgm.SystemEventManager.OnInteractionStarted     += HandleInteractionStarted;
         _sgm.SystemEventManager.OnDialogCompleted        += HandleDialogCompleted;
+        if (_sgm.UIManager?.dialogWindow != null)
+        {
+            _sgm.UIManager.dialogWindow.OnOpenWindowCallback += HandleDialogWindowOpened;
+            _sgm.UIManager.dialogWindow.OnCloseWindowCallback += HandleDialogWindowClosed;
+        }
 
         _hooked = true;
 
@@ -98,6 +109,11 @@ public class TelemetryHooks : MonoBehaviour
                 _sgm.SystemEventManager.OnTakeDamage         -= HandleTakeDamage;
                 _sgm.SystemEventManager.OnInteractionStarted -= HandleInteractionStarted;
                 _sgm.SystemEventManager.OnDialogCompleted    -= HandleDialogCompleted;
+                if (_sgm.UIManager?.dialogWindow != null)
+                {
+                    _sgm.UIManager.dialogWindow.OnOpenWindowCallback -= HandleDialogWindowOpened;
+                    _sgm.UIManager.dialogWindow.OnCloseWindowCallback -= HandleDialogWindowClosed;
+                }
             }
         }
 
@@ -112,6 +128,8 @@ public class TelemetryHooks : MonoBehaviour
         UnhookPlayerCombat();
         _playerCombat = _sgm.PlayerManager.ActiveCharacter.CharacterCombat;
         _playerCombat.OnKillEvent += HandleKill;
+        _playerCombat.OnHitEvent += HandleHitEvent;
+        _playerCombat.OnReceiveCombatMiss += HandleCombatMiss;
     }
 
     private void UnhookPlayerCombat()
@@ -119,6 +137,8 @@ public class TelemetryHooks : MonoBehaviour
         if (_playerCombat != null)
         {
             _playerCombat.OnKillEvent -= HandleKill;
+            _playerCombat.OnHitEvent -= HandleHitEvent;
+            _playerCombat.OnReceiveCombatMiss -= HandleCombatMiss;
             _playerCombat = null;
         }
     }
@@ -138,7 +158,10 @@ public class TelemetryHooks : MonoBehaviour
     private void HandleKill(BaseCharacter victim, float creditPercent)
     {
         if (creditPercent > 0f)
+        {
             logger.OnKill();
+            triggerDirector?.TriggerCombatVictory("enemy_killed");
+        }
     }
 
     private void HandlePlayerDeath(string _, EventParamProperties __)
@@ -151,7 +174,17 @@ public class TelemetryHooks : MonoBehaviour
     {
         if (_sgm?.PlayerManager?.ActiveCharacter == null) return;
         if (target?.BaseCharacter == _sgm.PlayerManager.ActiveCharacter)
+        {
             logger.OnDamageTaken(damage);
+            Debug.Log($"[TelemetryHooks] damage_taken += {damage} via {abilityName}");
+            if (damage >= 5)
+                triggerDirector?.TriggerCombatPressure("heavy_damage_taken");
+        }
+        else if (source?.AbilityManager?.GetCharacterUnit()?.BaseCharacter == _sgm.PlayerManager.ActiveCharacter)
+        {
+            logger.OnDamageDealt(damage);
+            Debug.Log($"[TelemetryHooks] damage_dealt += {damage} via {abilityName}");
+        }
     }
 
     // Quest objective ticked (e.g. kill 3/5 → 4/5)
@@ -176,24 +209,33 @@ public class TelemetryHooks : MonoBehaviour
             // Best-effort: set quest stage to "Quest Completed" so the LLM knows
             narrativeManager.currentQuestStage = "Quest completed";
         }
+
+        triggerDirector?.TriggerQuestUpdate("quest_completed");
     }
 
     // Loot taken — treat each loot event as an item pickup
     private void HandleLootTaken(string _, EventParamProperties __)
     {
         logger.OnLoreItemFound();
+        triggerDirector?.TriggerExploration("loot_or_lore_found");
     }
 
     // NPC / interactable interaction started
     private void HandleInteractionStarted(string interactableName)
     {
         logger.OnVoluntaryNPCInteraction();
+        triggerDirector?.TriggerDialogue("interaction_started");
     }
 
     // Dialogue window closed (all lines shown)
     private void HandleDialogCompleted(Dialog dialog)
     {
-        logger.OnDialogueShown();
+        _dialogCompletedThisOpen = true;
+        int shownLines = Mathf.Max(1, dialog != null ? dialog.DialogNodes.Count : 1);
+        for (int i = 0; i < shownLines; i++)
+            logger.OnDialogueShown();
+        Debug.Log($"[TelemetryHooks] dialogue_lines_shown += {shownLines}");
+        triggerDirector?.TriggerDialogue("dialogue_completed");
     }
 
     // Level/zone loaded — use scene display name as location
@@ -212,5 +254,54 @@ public class TelemetryHooks : MonoBehaviour
     private void HandleXPGained(string _, EventParamProperties __)
     {
         logger.OnObjectiveAttempted();
+    }
+
+    private void HandleHitEvent(BaseCharacter attacker, Interactable target)
+    {
+        if (_sgm?.PlayerManager?.ActiveCharacter == null) return;
+        if (attacker == _sgm.PlayerManager.ActiveCharacter)
+        {
+            logger.OnAbilityUsed(true);
+            Debug.Log("[TelemetryHooks] abilities_used += 1, abilities_hit += 1");
+        }
+    }
+
+    private void HandleCombatMiss(Interactable target, AbilityEffectContext abilityEffectContext)
+    {
+        logger.OnAbilityUsed(false);
+        Debug.Log("[TelemetryHooks] abilities_used += 1, abilities_hit += 0 (miss)");
+    }
+
+    private void HandleDialogWindowOpened()
+    {
+        _activeDialog = _sgm?.DialogManager?.Dialog;
+        _dialogCompletedThisOpen = false;
+    }
+
+    private void HandleDialogWindowClosed()
+    {
+        if (_dialogCompletedThisOpen || _activeDialog == null)
+        {
+            _activeDialog = null;
+            return;
+        }
+
+        int skippedLines = 0;
+        foreach (DialogNode node in _activeDialog.DialogNodes)
+        {
+            if (node != null && !node.Shown)
+                skippedLines++;
+        }
+
+        if (skippedLines <= 0 && _activeDialog.DialogNodes.Count > 0)
+            skippedLines = 1;
+
+        for (int i = 0; i < skippedLines; i++)
+            logger.OnDialogueSkipped();
+
+        Debug.Log($"[TelemetryHooks] dialogue_lines_skipped += {skippedLines}");
+        triggerDirector?.TriggerDialogue("dialogue_skipped");
+
+        _activeDialog = null;
     }
 }

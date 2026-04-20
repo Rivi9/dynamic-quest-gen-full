@@ -31,6 +31,9 @@ class NarrativeRequest(BaseModel):
     player_id: str = "unknown"
     location: str = "Unknown"
     quest_stage: str = "None"
+    trigger_type: str = "poll"
+    trigger_reason: str = "interval"
+    importance: str = "low"
 
 
 @router.post("/narrative/generate", response_model=NarrativeContent)
@@ -50,6 +53,9 @@ async def generate_narrative(request: NarrativeRequest) -> NarrativeContent:
         action=action,
         location=request.location,
         quest_stage=request.quest_stage,
+        trigger_type=request.trigger_type,
+        trigger_reason=request.trigger_reason,
+        importance=request.importance,
         lore_context=lore_context,
         memory_context=memory_ctx,
     )

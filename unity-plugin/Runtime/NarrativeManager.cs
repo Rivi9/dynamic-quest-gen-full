@@ -10,6 +10,9 @@ public class NarrativeRequest
     public string player_id;
     public string location;
     public string quest_stage;
+    public string trigger_type;
+    public string trigger_reason;
+    public string importance;
 }
 
 [System.Serializable]
@@ -36,6 +39,13 @@ public class NarrativeManager : MonoBehaviour
     [Range(10f, 60f)]
     public float narrativePollingInterval = 30f;
 
+    [Header("Request Gating")]
+    [Range(0f, 30f)]
+    public float minimumSecondsBetweenRequests = 10f;
+
+    private bool _requestInFlight;
+    private float _lastRequestStartTime = -999f;
+
     private void Start()
     {
         if (config == null)
@@ -44,12 +54,14 @@ public class NarrativeManager : MonoBehaviour
             enabled = false;
             return;
         }
+
         if (injector == null)
         {
             Debug.LogError("[NarrativeManager] ContentInjector is not assigned. Disabling component.");
             enabled = false;
             return;
         }
+
         InvokeRepeating(nameof(RequestNarrative), narrativePollingInterval, narrativePollingInterval);
     }
 
@@ -59,32 +71,54 @@ public class NarrativeManager : MonoBehaviour
         StopAllCoroutines();
     }
 
-    // Call this from game code to trigger an immediate narrative update (e.g., on major plot event)
     public void RequestImmediateNarrative()
     {
-        StartCoroutine(FetchNarrative());
+        RequestImmediateNarrative("event", "manual_request", "medium");
+    }
+
+    public void RequestImmediateNarrative(string triggerType, string triggerReason, string importance = "medium")
+    {
+        if (_requestInFlight)
+        {
+            Debug.Log($"[NarrativeManager] Skipping immediate narrative request while another is in flight ({triggerType}/{triggerReason}).");
+            return;
+        }
+
+        if (!CanStartRequest(triggerType, triggerReason))
+            return;
+
+        StartCoroutine(FetchNarrative(triggerType, triggerReason, importance));
     }
 
     private void RequestNarrative()
     {
-        Debug.Log($"[NarrativeManager] Polling narrative — location: {currentLocation}, quest: {currentQuestStage}");
-        StartCoroutine(FetchNarrative());
+        if (!CanStartRequest("poll", "interval"))
+            return;
+
+        Debug.Log($"[NarrativeManager] Polling narrative - location: {currentLocation}, quest: {currentQuestStage}");
+        StartCoroutine(FetchNarrative("poll", "interval", "low"));
     }
 
-    private IEnumerator FetchNarrative()
+    private IEnumerator FetchNarrative(string triggerType, string triggerReason, string importance)
     {
+        _requestInFlight = true;
+        _lastRequestStartTime = Time.time;
+
         var sessionId = (logger != null) ? logger.SessionId : System.Guid.NewGuid().ToString();
         var req = new NarrativeRequest
         {
-            session_id  = sessionId,
-            player_id   = config.playerId,
-            location    = currentLocation,
-            quest_stage = currentQuestStage
+            session_id = sessionId,
+            player_id = config.playerId,
+            location = currentLocation,
+            quest_stage = currentQuestStage,
+            trigger_type = string.IsNullOrWhiteSpace(triggerType) ? "poll" : triggerType,
+            trigger_reason = string.IsNullOrWhiteSpace(triggerReason) ? "interval" : triggerReason,
+            importance = string.IsNullOrWhiteSpace(importance) ? "low" : importance
         };
 
-        var json   = JsonUtility.ToJson(req);
+        var json = JsonUtility.ToJson(req);
         var webReq = new UnityWebRequest(config.backendApiUrl + "/narrative/generate", "POST");
-        webReq.uploadHandler   = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json));
+        webReq.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json));
         webReq.downloadHandler = new DownloadHandlerBuffer();
         webReq.SetRequestHeader("Content-Type", "application/json");
 
@@ -101,9 +135,21 @@ public class NarrativeManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"[NarrativeManager] Request failed: {webReq.error} — URL: {config.backendApiUrl}/narrative/generate");
+            Debug.LogWarning($"[NarrativeManager] Request failed: {webReq.error} - URL: {config.backendApiUrl}/narrative/generate");
         }
 
         webReq.Dispose();
+        _requestInFlight = false;
+    }
+
+    private bool CanStartRequest(string triggerType, string triggerReason)
+    {
+        if (Time.time - _lastRequestStartTime < minimumSecondsBetweenRequests)
+        {
+            Debug.Log($"[NarrativeManager] Skipping {triggerType}/{triggerReason} - minimum request gap not reached.");
+            return false;
+        }
+
+        return true;
     }
 }
