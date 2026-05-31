@@ -42,6 +42,15 @@
         Colombo, Sri Lanka \\
         rivindu.20220580@iit.ac.lk
     }
+    \and
+    \IEEEauthorblockN{Bimali Wickramasinghe}
+    \IEEEauthorblockA{
+        \textit{School of Computing} \\
+        \textit{Informatics Institute of Technology} \\
+        \textit{affiliated with Robert Gordon University} \\
+        Colombo, Sri Lanka \\
+        bimali.w@iit.ac.lk
+    }
 }
 
 \begin{document}
@@ -52,7 +61,7 @@
 % ABSTRACT
 % ==============================================================================
 \begin{abstract}
-Current game narrative systems deliver the same story to every player regardless of how they play. We present a closed-loop pipeline, implemented as a Unity plugin, that personalises RPG narrative in real time by integrating five modules: (1)~telemetry-derived Hexad-analogous player profiling from 23 behavioural signals, (2)~a rule-based Flow state classifier, (3)~a PPO reinforcement learning agent that selects among eight narrative tone actions, (4)~a RAG-grounded local LLM (Phi-3.5 Mini) for lore-consistent text generation, and (5)~importance-weighted episodic session memory. A between-subjects user study ($N = 50$; 1 excluded due to technical failure, yielding $N = 49$: 25 Experimental, 24 Control) using the Game Experience Questionnaire, a custom Narrative Personalization Scale (NPS-3), and semi-structured interviews found that the adaptive system produced significantly higher perceived personalization ($d = 0.84$, $p = .005$), a non-significant trend for Flow after Bonferroni correction ($d = 0.65$, $p = .027$, $\alpha_{\text{adj}} = .0167$), and no significant effect on immersion ($d = 0.38$). Behavioural telemetry corroborated the self-report findings: Experimental participants read 72\% of narrative dialogue versus 58\% in the Control condition ($d = 0.87$). Reflexive Thematic Analysis of 20 interviews identified four themes, including ambient narrative responsiveness and occasional tone--state dissonance as a failure mode. The system shows that continuous player modelling, RL-based narrative adaptation, and constrained LLM generation can work together in a single real-time game pipeline.
+Current game narrative systems deliver the same story to every player regardless of how they play. A closed-loop pipeline, implemented as a Unity plugin, is presented to personalise RPG narrative in real time by integrating five modules: (1)~telemetry-derived Hexad-analogous player profiling from 23 behavioural signals, (2)~a rule-based Flow state classifier, (3)~a PPO reinforcement learning agent that selects among eight narrative tone actions, (4)~a RAG-grounded local LLM (Phi-3.5 Mini) for lore-consistent text generation, and (5)~importance-weighted episodic session memory. A between-subjects user study ($N = 50$; 1 excluded due to technical failure, yielding $N = 49$: 25 Experimental, 24 Control) using the Game Experience Questionnaire, a custom Narrative Personalization Scale (NPS-3), and semi-structured interviews found that the adaptive system produced significantly higher perceived personalization ($d = 0.84$, $p = .005$), a non-significant trend for Flow after Bonferroni correction ($d = 0.65$, $p = .027$, $\alpha_{\text{adj}} = .0167$), and no significant effect on immersion ($d = 0.38$). Behavioural telemetry corroborated the self-report findings: Experimental participants read 72\% of narrative dialogue versus 58\% in the Control condition ($d = 0.87$). Reflexive Thematic Analysis of 20 interviews identified four themes, including ambient narrative responsiveness and occasional tone--state dissonance as a failure mode. The system shows that continuous player modelling, RL-based narrative adaptation, and constrained LLM generation can work together in a single real-time game pipeline.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -66,13 +75,13 @@ narrative personalization, player modelling, reinforcement learning, large langu
 
 Games are the only narrative medium in which the audience both directs the protagonist and shapes how the story unfolds. Yet most commercially released games present nearly the same narrative sequence to every player. The village elder delivers the same warning whether the player is a careful explorer or a reckless disruptor who skips dialogue and rushes into combat.
 
-This uniformity stems not from lack of interest but from the cost of creating alternatives. Each authored branch demands additional writing, voice work, and implementation, growing at a combinatorial rate. Even narratively ambitious titles like \textit{Disco Elysium} hit a practical upper limit on authored branching long before achieving genuinely player-adaptive personalization.
+This uniformity stems not from lack of interest but from the cost of creating alternatives. Each authored branch demands additional writing, voice work, and implementation, growing at a combinatorial rate. Even narratively ambitious titles such as \textit{Disco Elysium}~\cite{discoelysium2019} reach a practical upper limit on authored branching long before genuinely player-adaptive personalization is achieved.
 
 The convergence of large language models (LLMs) capable of coherent long-form text~\cite{brown2020language}, real-time player behaviour modelling, and reinforcement learning (RL) policy optimisation points to a new opportunity: narrative generated on the fly in response to an individual player's observed preferences and engagement profile. Prior work has addressed components of this problem in isolation. PANGeA~\cite{todd2024pangea} demonstrated LLM-grounded narrative generation but without a player model or adaptive policy. LIGS~\cite{ligs2025chi} addressed narrative coherence across sessions but not personalization. DDA systems~\cite{hunicke2004ai, climent2024framework} adapt mechanical parameters (enemy health, spawn rates) but not story content. No prior system has integrated continuous player profiling, Flow-based RL reward shaping, RAG-grounded LLM generation, and episodic session memory into a single closed-loop pipeline. The PPO agent is trained offline and deployed with frozen weights; it does not perform online learning during play sessions.
 
-This paper presents such a system: a Unity plugin that continuously profiles the player using telemetry-derived Hexad-analogous scores~\cite{tondello2016hexad} and a Flow state classifier based on Csikszentmihalyi's~\cite{csikszentmihalyi1990flow} challenge--skill balance framework. A PPO agent~\cite{schulman2017proximal} selects among eight narrative actions; a RAG pipeline constrains the LLM to a structured lore corpus; and an episodic memory module maintains cross-event narrative coherence. We evaluate the system in a between-subjects study ($N = 49$) using validated psychometric instruments and behavioural telemetry.
+This paper presents such a system: a Unity plugin that continuously profiles the player using telemetry-derived Hexad-analogous scores~\cite{tondello2016hexad} and a Flow state classifier based on Csikszentmihalyi's~\cite{csikszentmihalyi1990flow} challenge--skill balance framework. A PPO agent~\cite{schulman2017proximal} selects among eight narrative actions; a RAG pipeline constrains the LLM to a structured lore corpus; and an episodic memory module maintains cross-event narrative coherence. The system is evaluated in a between-subjects study ($N = 49$) using validated psychometric instruments and behavioural telemetry.
 
-\textbf{Contributions.} The primary contribution is showing that the integrated pipeline works end-to-end, not a claim that any single module is independently novel. The modules are: (1)~a method for deriving continuous Hexad-analogous behavioural motivation scores from in-session telemetry without a pre-play questionnaire; (2)~a RAG pipeline that selects lore context dynamically based on player state; (3)~importance-weighted episodic session memory for cross-event narrative continuity; (4)~PPO for narrative action selection using a Flow-based MDP reward; and (5)~a mixed-methods evaluation ($N = 49$) provides evidence for perceived personalization and corroborating behavioural effects; the evaluation tests the pipeline as a whole, not individual module contributions.
+\textit{Contributions.} The primary contribution is showing that the integrated pipeline works end-to-end, not a claim that any single module is independently novel. The modules are: (1)~a method for deriving continuous Hexad-analogous behavioural motivation scores from in-session telemetry without a pre-play questionnaire; (2)~a RAG pipeline that selects lore context dynamically based on player state; (3)~importance-weighted episodic session memory for cross-event narrative continuity; (4)~PPO for narrative action selection using a Flow-based MDP reward; and (5)~a mixed-methods evaluation ($N = 49$) provides evidence for perceived personalization and corroborating behavioural effects; the evaluation tests the pipeline as a whole, not individual module contributions.
 
 % ==============================================================================
 % II. RELATED WORK
@@ -115,7 +124,7 @@ DDA & \cite{hunicke2004ai} & Beh. & Imp. & -- & -- & -- & -- \\
 RL-DDA & \cite{climent2024framework} & Beh. & Imp. & -- & -- & -- & -- \\
 player2vec & \cite{devlin2024player2vec} & Deep & -- & -- & -- & -- & -- \\[2pt]
 EM-LLM & \cite{fountas2024episodic} & -- & -- & \checkmark & -- & \checkmark & -- \\
-\textbf{Ours} & & \textbf{Hex+} & \textbf{Exp.} & \checkmark & \checkmark & \checkmark & \checkmark \\
+\textit{This research} & & \textit{Hex+} & \textit{Exp.} & \checkmark & \checkmark & \checkmark & \checkmark \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -125,7 +134,7 @@ EM-LLM & \cite{fountas2024episodic} & -- & -- & \checkmark & -- & \checkmark & -
 % ==============================================================================
 \section{System Architecture}
 
-The system comprises five modules in a closed-loop pipeline (Fig.~\ref{fig:architecture}): telemetry collection (Unity), player modelling, PPO-based adaptation, RAG-grounded narrative generation, and content injection (Unity). The loop is reactive (the PPO agent uses frozen pre-trained weights and does not learn during a session), but it closes the feedback cycle every five seconds: sense the player's state, decide on a narrative action, generate content, deliver it, and observe what the player does next. End-to-end latency from telemetry ingestion to content delivery averages 1.2--2.8\,s depending on LLM inference load.
+The system comprises five modules in a closed-loop pipeline (Fig.~\ref{fig:architecture}): telemetry collection (Unity), player modelling, PPO-based adaptation, RAG-grounded narrative generation, and content injection (Unity). This design follows established game-telemetry and feedback-control principles in which player behaviour is sensed, modelled, and used to adapt subsequent system behaviour~\cite{drachen2013game, sutton2018reinforcement}. The loop is reactive (the PPO agent uses frozen pre-trained weights and does not learn during a session), but the feedback cycle is closed every five seconds: the player's state is sensed, a narrative action is selected, content is generated and delivered, and the subsequent player behaviour is observed. End-to-end latency from telemetry ingestion to content delivery averages 1.2--2.8\,s depending on LLM inference load.
 
 \begin{figure}[htbp]
 \centering
@@ -170,20 +179,20 @@ The system comprises five modules in a closed-loop pipeline (Fig.~\ref{fig:archi
 
 \subsection{Telemetry Collection}
 
-The Unity \texttt{PlayerDataLogger} captures 23 behavioural fields per five-second window (kills, deaths, damage, abilities, objectives, exploration, NPC interactions, dialogue engagement, lore items, idle time, and session metadata) and transmits a \texttt{TelemetryBatch} to the FastAPI backend via HTTP POST.
+The Unity \textit{PlayerDataLogger} captures 23 behavioural fields per five-second window (kills, deaths, damage, abilities, objectives, exploration, NPC interactions, dialogue engagement, lore items, idle time, and session metadata) and transmits a \textit{TelemetryBatch} to the FastAPI backend via HTTP POST.
 
 \subsection{Player Modelling}
 
-The \textbf{Feature Extractor} computes 11 normalised scalar features from raw telemetry, including \texttt{kd\_ratio}, \texttt{objective\_rate}, \texttt{explore\_rate}, \texttt{dialogue\_engage}, \texttt{ability\_accuracy}, and a composite \texttt{challenge\_skill\_ratio} that captures Csikszentmihalyi's challenge--skill balance as a single scalar.
+The \textit{Feature Extractor} computes 11 normalised scalar features from raw telemetry, including \textit{kd\_ratio}, \textit{objective\_rate}, \textit{explore\_rate}, \textit{dialogue\_engage}, \textit{ability\_accuracy}, and a composite \textit{challenge\_skill\_ratio} that captures Csikszentmihalyi's challenge--skill balance as a single scalar.
 
-The \textbf{Hexad Profiler} derives six continuous scores $\in [0,1]$ from the cumulative session telemetry, each corresponding to a Hexad dimension (Achiever, Explorer, Socializer, Free Spirit, Disruptor, Philanthropist). These scores are behavioural motivation proxies inferred from telemetry patterns theoretically associated with each dimension, not validated Hexad questionnaire equivalents. For example, the Explorer score combines \texttt{explore\_rate} and \texttt{unique\_areas\_visited}; the Achiever score weights \texttt{kd\_ratio}, \texttt{objective\_rate}, and \texttt{ability\_accuracy}.
+The \textit{Hexad Profiler} derives six continuous scores $\in [0,1]$ from the cumulative session telemetry, each corresponding to a Hexad dimension (Achiever, Explorer, Socializer, Free Spirit, Disruptor, Philanthropist). These scores are behavioural motivation proxies inferred from telemetry patterns theoretically associated with each dimension, not validated Hexad questionnaire equivalents. For example, the Explorer score combines \textit{explore\_rate} and \textit{unique\_areas\_visited}; the Achiever score weights \textit{kd\_ratio}, \textit{objective\_rate}, and \textit{ability\_accuracy}.
 
-The \textbf{Flow Classifier} assigns one of four states via a rule-based decision tree:
+The \textit{Flow Classifier} assigns one of four states via a rule-based decision tree:
 \begin{itemize}
-    \item \textbf{APATHY}: idle $> 0.4$ AND dialogue\_engage $< 0.3$ AND ratio $< 0.75$
-    \item \textbf{BOREDOM}: ratio $< 0.75$
-    \item \textbf{ANXIETY}: ratio $> 1.30$
-    \item \textbf{FLOW}: ratio $\in [0.75, 1.30]$
+    \item \textit{APATHY}: idle $> 0.4$ AND dialogue\_engage $< 0.3$ AND ratio $< 0.75$
+    \item \textit{BOREDOM}: ratio $< 0.75$
+    \item \textit{ANXIETY}: ratio $> 1.30$
+    \item \textit{FLOW}: ratio $\in [0.75, 1.30]$
 \end{itemize}
 The thresholds define a zone around challenge--skill balance ($= 1.0$), with asymmetry ($-0.25$ below, $+0.30$ above) reflecting that players tolerate slight over-challenge better than under-challenge~\cite{yannakakis2009realtime}. These are design parameters, not empirically calibrated values.
 
@@ -191,17 +200,17 @@ The thresholds define a zone around challenge--skill balance ($= 1.0$), with asy
 
 The adaptation problem is formalised as an MDP $(S, A, T, R, \gamma)$:
 
-\textbf{State space $S$:} A 7-dimensional continuous vector: encoded Flow state, normalised challenge--skill ratio, four Hexad dimensions (Explorer, Socializer, Achiever, Disruptor), and normalised session progress. Free Spirit and Philanthropist are excluded as a deliberate dimensionality reduction; their signals are captured by other state components.
+\textit{State space $S$:} A 7-dimensional continuous vector: encoded Flow state, normalised challenge--skill ratio, four Hexad dimensions (Explorer, Socializer, Achiever, Disruptor), and normalised session progress. Free Spirit and Philanthropist are excluded as a deliberate dimensionality reduction; their signals are captured by other state components.
 
-\textbf{Action space $A$:} Discrete(8) corresponding to eight narrative actions: \textsc{Lower\_Stakes}, \textsc{Raise\_Stakes}, \textsc{Add\_Mystery}, \textsc{Add\_Humor}, \textsc{Provide\_Guidance}, \textsc{Increase\_Urgency}, \textsc{Lore\_Reward}, and \textsc{No\_Change}.
+\textit{Action space $A$:} Discrete(8) corresponding to eight narrative actions: \textit{LOWER\_STAKES}, \textit{RAISE\_STAKES}, \textit{ADD\_MYSTERY}, \textit{ADD\_HUMOR}, \textit{PROVIDE\_GUIDANCE}, \textit{INCREASE\_URGENCY}, \textit{LORE\_REWARD}, and \textit{NO\_CHANGE}.
 
-\textbf{Reward function $R$:} The reward is a direct translation of Flow theory into graduated penalties: FLOW $= +1.0$, BOREDOM $= -0.3$, ANXIETY $= -0.5$, APATHY $= -0.8$. Shaping rewards include a Flow streak bonus ($+0.20$ after two consecutive FLOW steps), a transition bonus ($+0.30$ for recovering from ANXIETY/BOREDOM to FLOW), a repetition penalty ($-0.15$ when all three recent actions are identical), and a step penalty ($-0.05$). These values are hand-tuned hyperparameters; the graduated ordering follows the theoretical rationale that deeper disengagement is harder to recover from~\cite{csikszentmihalyi1990flow, chen2007flow}. The shaping rewards follow the principle of potential-based reward shaping~\cite{ng1999policy}.
+\textit{Reward function $R$:} The reward is a direct translation of Flow theory into graduated penalties: FLOW $= +1.0$, BOREDOM $= -0.3$, ANXIETY $= -0.5$, APATHY $= -0.8$. Shaping rewards include a Flow streak bonus ($+0.20$ after two consecutive FLOW steps), a transition bonus ($+0.30$ for recovering from ANXIETY/BOREDOM to FLOW), a repetition penalty ($-0.15$ when all three recent actions are identical), and a step penalty ($-0.05$). These values are hand-tuned hyperparameters; the graduated ordering follows the theoretical rationale that deeper disengagement is harder to recover from~\cite{csikszentmihalyi1990flow, chen2007flow}. The shaping rewards follow the principle of potential-based reward shaping~\cite{ng1999policy}.
 
-The agent uses Stable-Baselines3~\cite{raffin2021stable} PPO with MlpPolicy (two hidden layers of 64 units), trained for 200,000 timesteps in a simulated Gymnasium environment. For the first 120 seconds of a session, a deterministic cold-start heuristic maps Flow states to actions (ANXIETY $\to$ \textsc{Provide\_Guidance}, BOREDOM $\to$ \textsc{Increase\_Urgency}, APATHY $\to$ \textsc{Add\_Mystery}, FLOW $\to$ \textsc{No\_Change}).
+The agent uses Stable-Baselines3~\cite{raffin2021stable} PPO with MlpPolicy (two hidden layers of 64 units), trained for 200,000 timesteps in a simulated Gymnasium environment. For the first 120 seconds of a session, a deterministic cold-start heuristic maps Flow states to actions (ANXIETY $\to$ \textit{PROVIDE\_GUIDANCE}, BOREDOM $\to$ \textit{INCREASE\_URGENCY}, APATHY $\to$ \textit{ADD\_MYSTERY}, FLOW $\to$ \textit{NO\_CHANGE}).
 
 \subsection{RAG-Grounded Narrative Generation}
 
-The \texttt{LoreRetriever} uses sentence-transformers all-MiniLM-L6-v2~\cite{wang2020minilm} to embed a lore corpus (world, character, and quest documents) into a 384-dimensional space. At generation time, the top $k=3$ passages by cosine similarity are retrieved and injected into the prompt alongside the selected narrative action, the player model summary, and the episodic memory context.
+The \textit{LoreRetriever} uses sentence-transformers all-MiniLM-L6-v2~\cite{wang2020minilm} to embed a lore corpus (world, character, and quest documents) into a 384-dimensional space. At generation time, the top $k=3$ passages by cosine similarity are retrieved and injected into the prompt alongside the selected narrative action, the player model summary, and the episodic memory context.
 
 \subsection{Episodic Session Memory}
 
@@ -214,21 +223,21 @@ Inspired by EM-LLM~\cite{fountas2024episodic}, a lightweight memory module maint
 
 \subsection{Study Design}
 
-A between-subjects design with random assignment ($N = 50$; 1 excluded due to server crash, yielding $N = 49$: 25 Experimental, 24 Control). The Experimental condition deployed the full adaptive system; the Control condition replaced adaptive narrative with a \texttt{StaticNarrativeContent} asset delivering pre-authored fragments. All other aspects (game environment, objectives, UI, session duration of 30 minutes) were identical across conditions. The testbed was a 3D RPG built on the AnyRPG Core framework in Unity 2021.3 LTS.
+A between-subjects design with random assignment was used ($N = 50$; 1 excluded due to server crash, yielding $N = 49$: 25 Experimental, 24 Control), following standard experimental-design practice for comparing independent conditions~\cite{shadish2002experimental}. The Experimental condition deployed the full adaptive system; the Control condition replaced adaptive narrative with a \textit{StaticNarrativeContent} asset delivering pre-authored fragments. All other aspects (game environment, objectives, UI, session duration of 30 minutes) were identical across conditions. The testbed was a 3D RPG built on the AnyRPG Core framework in Unity 2021.3 LTS.
 
 \subsection{Instruments}
 
-\textbf{GEQ Core Module}~\cite{ijsselsteijn2013geq}: 33-item, 0--4 scale. Primary DV: Flow subscale (5 items, $\alpha = .79$). Secondary DV: Immersion subscale (6 items, $\alpha = .82$).
+\textit{GEQ Core Module}~\cite{ijsselsteijn2013geq}: 33-item, 0--4 scale. Primary DV: Flow subscale (5 items, $\alpha = .79$). Secondary DV: Immersion subscale (6 items, $\alpha = .82$).
 
-\textbf{NPS-3}: Custom 3-item Narrative Personalization Scale (1--7 Likert, $\alpha = .76$). As a custom instrument without independent validation, the NPS-3 captures perceived narrative responsiveness rather than a validated personalization construct.
+\textit{NPS-3}: Custom 3-item Narrative Personalization Scale (1--7 Likert, $\alpha = .76$). As a custom instrument without independent validation, the NPS-3 captures perceived narrative responsiveness rather than a validated personalization construct.
 
-\textbf{miniPXI}~\cite{vornhagen2022minipxi}: 11-item, 1--7 scale. Total score as a general player experience index.
+\textit{miniPXI}~\cite{vornhagen2022minipxi}: 11-item, 1--7 scale. Total score as a general player experience index.
 
-\textbf{Semi-structured interviews}: 20 participants (10 per condition), analysed via Reflexive Thematic Analysis~\cite{braun2022thematic}.
+\textit{Semi-structured interviews}: 20 participants (10 per condition), analysed via Reflexive Thematic Analysis~\cite{braun2022thematic}.
 
 \subsection{Statistical Approach}
 
-Welch's $t$-tests with Bonferroni correction across three hypotheses ($\alpha_{\text{adj}} = .0167$). Shapiro-Wilk tests indicated no significant departure from normality for the primary measures ($p > .05$ in all cases); non-parametric Mann-Whitney $U$ tests confirmed the same pattern of results. Effect sizes reported as Cohen's $d$ with 95\% confidence intervals. A priori power analysis (G*Power~\cite{faul2007gpower}) targeting $d = 0.5$, $\alpha = .05$, power $= 0.80$ indicated $n = 25$ per group.
+Welch's $t$-tests~\cite{welch1947generalization} with Bonferroni correction~\cite{bonferroni1936teoria} across three hypotheses were used ($\alpha_{\text{adj}} = .0167$). Shapiro-Wilk tests~\cite{shapiro1965analysis} indicated no significant departure from normality for the primary measures ($p > .05$ in all cases); non-parametric Mann-Whitney $U$ tests~\cite{mann1947test} confirmed the same pattern of results. Effect sizes were reported as Cohen's $d$~\cite{cohen1988statistical} with 95\% confidence intervals. A priori power analysis (G*Power~\cite{faul2007gpower}) targeting $d = 0.5$, $\alpha = .05$, power $= 0.80$ indicated $n = 25$ per group.
 
 % ==============================================================================
 % V. RESULTS
@@ -262,11 +271,11 @@ miniPXI & 4.86 (0.82) & 4.41 (0.91) & 1.83 & .074 & 0.52 & [$-$0.05, 1.09] \\
 \end{tabular}
 \end{table}
 
-\textbf{H1 (Flow):} Partially supported. The Experimental group reported higher GEQ Flow ($d = 0.65$, medium), but the result narrowly missed the Bonferroni threshold ($p = .027 > .0167$).
+\textit{H1 (Flow):} Partially supported. The Experimental group reported higher GEQ Flow ($d = 0.65$, medium), but the result narrowly missed the Bonferroni threshold ($p = .027 > .0167$).
 
-\textbf{H2 (Immersion):} Not supported ($d = 0.38$, $p = .187$).
+\textit{H2 (Immersion):} Not supported ($d = 0.38$, $p = .187$).
 
-\textbf{H3 (Personalization):} Strongly supported. NPS-3 scores were significantly higher in the Experimental condition ($d = 0.84$, large), surviving Bonferroni correction ($p = .005$).
+\textit{H3 (Personalization):} Strongly supported. NPS-3 scores were significantly higher in the Experimental condition ($d = 0.84$, large), surviving Bonferroni correction ($p = .005$).
 
 The miniPXI total score showed a non-significant trend favouring the Experimental condition ($d = 0.52$, $p = .074$).
 
@@ -278,13 +287,13 @@ Experimental participants read a significantly higher proportion of narrative di
 
 Reflexive Thematic Analysis~\cite{braun2022thematic} of 20 interviews yielded four themes:
 
-\textbf{Theme 1: ``The story pays attention.''} Eight of 10 Experimental interviewees described an ambient sense that the narrative responded to their behaviour, using metaphors of being ``noticed'' by the game.
+\textit{Theme 1: ``The story pays attention.''} Eight of 10 Experimental interviewees described an ambient sense that the narrative responded to their behaviour, using metaphors of being ``noticed'' by the game.
 
-\textbf{Theme 2: ``Tone matching.''} Six Experimental participants described specific moments where narrative tone aligned with gameplay intensity.
+\textit{Theme 2: ``Tone matching.''} Six Experimental participants described specific moments where narrative tone aligned with gameplay intensity.
 
-\textbf{Theme 3: ``Generic narrative as wallpaper.''} Seven of 10 Control interviewees described gradual disengagement from narrative content, consistent with the lower dialogue read ratio.
+\textit{Theme 3: ``Generic narrative as wallpaper.''} Seven of 10 Control interviewees described gradual disengagement from narrative content, consistent with the lower dialogue read ratio.
 
-\textbf{Theme 4: ``Occasional dissonance.''} Four Experimental participants noted moments of tone mismatch, typically receiving ``mystery'' content during intense combat. This points to a concrete failure mode: the 5-second telemetry cycle means the PPO agent's action selection can lag behind rapid state transitions.
+\textit{Theme 4: ``Occasional dissonance.''} Four Experimental participants noted moments of tone mismatch, typically receiving ``mystery'' content during intense combat. This points to a concrete failure mode: the 5-second telemetry cycle means the PPO agent's action selection can lag behind rapid state transitions.
 
 % ==============================================================================
 % VI. DISCUSSION
@@ -295,20 +304,20 @@ The pattern of results (strong personalization at $d = 0.84$, moderate Flow at $
 
 The behavioural metrics are, in some ways, the most convincing evidence. Participants did not know their dialogue reading behaviour was being measured, so the difference ($d = 0.87$) cannot be attributed to response bias. The adaptive narrative changed what participants \textit{did} during play, not merely what they \textit{said} about it afterward.
 
-We did not test whether NPS-3 and GEQ Flow are measuring the same underlying thing. Both involve engagement with game content, so it is possible that the two apparently separate results partly reflect a single effect rather than two independent ones.
+Whether NPS-3 and GEQ Flow measure the same underlying construct was not tested. Both involve engagement with game content, so it is possible that the two apparently separate results partly reflect a single effect rather than two independent ones.
 
 The qualitative themes provide mechanistic insight: Theme~2 (tone matching) reflects effective PPO action selection, while Theme~4 (dissonance) identifies the 5-second telemetry cycle as a design limitation rather than a policy failure. Notably, no participants in either condition described the narrative as obviously AI-generated, consistent with LIGS's finding~\cite{ligs2025chi} that constrained LLM output can pass for human-authored content when appropriately grounded.
 
 \subsection{Limitations}
 
-The PPO agent was trained on a simulated MDP with hand-specified transitions; the learned policy reflects simulator assumptions, not real player dynamics, so the contribution is a feasibility demonstration rather than a claim of policy optimality. The Hexad profiling is rule-based and unvalidated against questionnaire ground truth. The NPS-3 is a custom 3-item scale without independent validation ($\alpha = .76$). The LLM (Phi-3.5 Mini, 3.8B) constrains narrative quality; larger models would likely do better. The single 30-minute session captures no cumulative effects, and the testbed game is a simplified prototype, not a commercial title. With $n = 25$ per condition, the study can detect medium-to-large effects but would miss small ones. No ablation study was conducted to isolate what each module contributes; the evaluation compares the full system against a static baseline, so the individual value of RAG, PPO, or memory is unknown. The divergence between PPO-selected actions and cold-start heuristic actions was also not measured, so we cannot say how much the RL adds over the simpler rule-based fallback.
+The PPO agent was trained on a simulated MDP with hand-specified transitions; the learned policy reflects simulator assumptions, not real player dynamics, so the contribution is a feasibility demonstration rather than a claim of policy optimality. The Hexad profiling is rule-based and unvalidated against questionnaire ground truth. The NPS-3 is a custom 3-item scale without independent validation ($\alpha = .76$). The LLM (Phi-3.5 Mini, 3.8B) constrains narrative quality; larger models would likely do better. The single 30-minute session captures no cumulative effects, and the testbed game is a simplified prototype, not a commercial title. With $n = 25$ per condition, the study can detect medium-to-large effects but would miss small ones. No ablation study was conducted to isolate what each module contributes; the evaluation compares the full system against a static baseline, so the individual value of RAG, PPO, or memory is unknown. The divergence between PPO-selected actions and cold-start heuristic actions was also not measured, so the extent to which RL adds value over the simpler rule-based fallback remains unknown.
 
 % ==============================================================================
 % VII. CONCLUSION AND FUTURE WORK
 % ==============================================================================
 \section{Conclusion}
 
-This paper presented a system that personalises RPG narrative in real time by wiring together telemetry-derived player profiling, PPO-based narrative action selection, RAG-grounded LLM generation, and episodic session memory into a single closed loop. A between-subjects evaluation ($N = 49$) found strong evidence for perceived personalization ($d = 0.84$), a suggestive but non-significant trend for Flow ($d = 0.65$), and corroborating behavioural evidence ($d = 0.87$ for dialogue engagement). The system shows that these components can work together in real time; the open question is how much each one contributes individually.
+This paper presented a system that personalises RPG narrative in real time by integrating telemetry-derived player profiling, PPO-based narrative action selection, RAG-grounded LLM generation, and episodic session memory into a single closed loop. A between-subjects evaluation ($N = 49$) found strong evidence for perceived personalization ($d = 0.84$), a suggestive but non-significant trend for Flow ($d = 0.65$), and corroborating behavioural evidence ($d = 0.87$ for dialogue engagement). The system shows that these components can work together in real time; the open question is how much each one contributes individually.
 
 The backend, Unity plugin, lore corpus, trained PPO weights, and evaluation scripts are available at the project repository to support reproducibility.
 
